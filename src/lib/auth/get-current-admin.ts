@@ -17,11 +17,19 @@ export async function getCurrentAdmin() {
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError || !user) {
+  const isMissingOrInvalidSession =
+    userError?.message?.includes("Auth session missing") ||
+    userError?.message?.includes("Invalid Refresh Token");
+
+  if (isMissingOrInvalidSession || !user) {
     return {
       user: null,
       admin: null,
     };
+  }
+
+  if (userError) {
+    throw userError;
   }
 
   const { data: admin, error: adminError } = await supabase
