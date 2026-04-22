@@ -24,11 +24,26 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : String(error);
+
+    const isIgnorable =
+      message.includes("Auth session missing") ||
+      message.includes("Invalid Refresh Token");
+
+    if (!isIgnorable) {
+      throw error;
+    }
+  }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

@@ -22,14 +22,16 @@ export default async function AdminLoginPage() {
 
       <div className="relative mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-10">
         <div className="flex w-full max-w-md flex-col items-center gap-6">
-          <Image
-            src={siteConfig.logoSquareUrl}
-            alt={siteConfig.name}
-            width={208}
-            height={208}
-            priority
-            className="h-auto w-44 select-none md:w-52"
-          />
+          <div className="rounded-2xl bg-[#000000] px-2 py-2">
+            <Image
+              src={siteConfig.logoSquareUrl}
+              alt={siteConfig.name}
+              width={208}
+              height={208}
+              priority
+              className="h-auto w-44 select-none md:w-52"
+            />
+          </div>
 
           <AdminLoginForm />
         </div>
