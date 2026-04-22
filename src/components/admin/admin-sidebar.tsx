@@ -36,7 +36,7 @@ const navItems = [
     title: "Transmisión",
     href: "/admin/stream",
     icon: Radio,
-    enabled: false,
+    enabled: true,
   },
   {
     title: "Sponsors",
