@@ -1,9 +1,31 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
+import { BlogPagination } from "@/components/blog/blog-pagination";
 import { getPublicBlogPosts } from "@/lib/blog/get-public-blog-posts";
 import { siteConfig } from "@/lib/config/site";
+import { absoluteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+const BLOG_POSTS_PER_PAGE = 6;
+
+type BlogPageProps = {
+  searchParams?: Promise<{
+    page?: string;
+  }>;
+};
+
+function getSafePage(value?: string) {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return 1;
+  }
+
+  return Math.floor(parsed);
+}
 
 function formatDate(value?: string | null) {
   if (!value) return null;
@@ -14,8 +36,68 @@ function formatDate(value?: string | null) {
   }).format(new Date(value));
 }
 
-export default async function BlogPage() {
-  const posts = await getPublicBlogPosts();
+export async function generateMetadata({
+  searchParams,
+}: Readonly<BlogPageProps>): Promise<Metadata> {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const currentPage = getSafePage(resolvedSearchParams.page);
+
+  const title =
+    currentPage > 1
+      ? `Blog - Página ${currentPage} | ${siteConfig.name}`
+      : `Blog | ${siteConfig.name}`;
+
+  const description =
+    currentPage > 1
+      ? `Explorá la página ${currentPage} del blog de ${siteConfig.name}: efemérides musicales, novedades del canal y especiales temáticos.`
+      : `Explorá el blog de ${siteConfig.name}: efemérides musicales, novedades del canal, especiales temáticos y contenido editorial del universo 80's.`;
+
+  const canonical =
+    currentPage > 1 ? absoluteUrl(`/blog?page=${currentPage}`) : absoluteUrl("/blog");
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "website",
+      images: [
+        {
+          url: siteConfig.logoBannerUrl,
+          width: 1200,
+          height: 514,
+          alt: siteConfig.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [siteConfig.logoBannerUrl],
+    },
+  };
+}
+
+export default async function BlogPage({
+  searchParams,
+}: Readonly<BlogPageProps>) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const currentPage = getSafePage(resolvedSearchParams.page);
+
+  const { posts, totalCount, totalPages } = await getPublicBlogPosts({
+    page: currentPage,
+    pageSize: BLOG_POSTS_PER_PAGE,
+  });
+
+  if (totalCount > 0 && currentPage > totalPages) {
+    notFound();
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#000000] text-white">
@@ -44,7 +126,8 @@ export default async function BlogPage() {
           </h1>
 
           <p className="mx-auto mt-4 max-w-3xl text-sm leading-7 text-zinc-400 md:text-base">
-            Efemérides musicales, novedades del canal, especiales temáticos y contenido editorial de 80&apos;s Forever.
+            Efemérides musicales, novedades del canal, especiales temáticos y
+            contenido editorial de 80&apos;s Forever.
           </p>
         </header>
 
@@ -93,6 +176,10 @@ export default async function BlogPage() {
             </div>
           )}
         </section>
+
+        {posts.length ? (
+          <BlogPagination currentPage={currentPage} totalPages={totalPages} />
+        ) : null}
       </div>
     </main>
   );
