@@ -26,7 +26,16 @@ export default async function BlogPage() {
 
       <div className="relative mx-auto max-w-6xl px-6 py-12 md:px-8">
         <header className="border-b border-white/10 pb-8 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-zinc-500 [font-family:var(--font-orbitron)]">
+          <div className="flex justify-center">
+            <Link
+              href="/"
+              className="inline-flex rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/10 px-4 py-2 text-sm text-fuchsia-300 transition hover:bg-fuchsia-500/15"
+            >
+              Volver al inicio
+            </Link>
+          </div>
+
+          <p className="mt-6 text-xs uppercase tracking-[0.3em] text-zinc-500 [font-family:var(--font-orbitron)]">
             {siteConfig.name}
           </p>
 

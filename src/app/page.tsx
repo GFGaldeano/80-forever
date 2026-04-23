@@ -68,6 +68,22 @@ export default async function HomePage() {
           <div className="mt-6">
             <StreamStatusBadge status={status} />
           </div>
+
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/blog"
+              className="inline-flex rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/10 px-4 py-2 text-sm text-fuchsia-300 transition hover:bg-fuchsia-500/15"
+            >
+              Ir al blog
+            </Link>
+
+            <Link
+              href="/contacto"
+              className="inline-flex rounded-xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white transition hover:bg-white/[0.04]"
+            >
+              Contacto
+            </Link>
+          </div>
         </header>
 
         {topAssets.length ? (
@@ -137,13 +153,6 @@ export default async function HomePage() {
                 className="inline-flex rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/15"
               >
                 Ir al formulario
-              </Link>
-
-              <Link
-                href="/contacto"
-                className="inline-flex rounded-xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white transition hover:bg-white/[0.04]"
-              >
-                Contacto
               </Link>
             </div>
           </div>
