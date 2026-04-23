@@ -54,7 +54,7 @@ const navItems = [
     title: "Pedidos",
     href: "/admin/requests",
     icon: Music2,
-    enabled: false,
+    enabled: true,
   },
   {
     title: "Blog",
@@ -124,7 +124,7 @@ function SidebarNavContent({ admin }: AdminSidebarProps) {
                 "flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition",
                 isActive
                   ? "border border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
-                  : "text-zinc-300 hover:bg-white/[0.04] hover:text-white",
+                  : "text-zinc-300 hover:bg-white/[0.04] hover:text-white"
               )}
             >
               <Icon className="h-4 w-4" />
