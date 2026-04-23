@@ -67,7 +67,7 @@ const navItems = [
     title: "Blog",
     href: "/admin/blog",
     icon: FileText,
-    enabled: false,
+    enabled: true,
   },
   {
     title: "Configuración",

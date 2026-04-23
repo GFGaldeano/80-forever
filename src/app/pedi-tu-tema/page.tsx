@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Music2 } from "lucide-react";
 
 import { SongRequestForm } from "@/components/forms/song-request-form";
@@ -33,6 +34,15 @@ export default function SongRequestsPublicPage() {
             canciones, artistas y dedicatorias. El pedido queda registrado en el
             panel administrativo para su revisión.
           </p>
+
+          <div className="mt-6 flex justify-center">
+            <Link
+              href="/"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-fuchsia-400/40 bg-fuchsia-500/10 px-5 text-sm font-medium text-fuchsia-300 shadow-[0_0_18px_rgba(217,70,239,0.18)] backdrop-blur-sm transition hover:border-fuchsia-300/70 hover:bg-fuchsia-500/15 hover:text-fuchsia-200 hover:shadow-[0_0_24px_rgba(217,70,239,0.28)]"
+            >
+              Volver al inicio
+            </Link>
+          </div>
         </div>
 
         <div className="mt-10">
