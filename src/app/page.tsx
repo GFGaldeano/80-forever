@@ -119,15 +119,22 @@ export default async function HomePage() {
 
           <div className="rounded-3xl border border-white/10 bg-zinc-950/70 p-6">
             <p className="text-xs uppercase tracking-[0.24em] text-zinc-500 [font-family:var(--font-orbitron)]">
-              Estado del MVP
+              Interacción
             </p>
             <h2 className="mt-3 text-xl font-semibold text-white">
-              Sponsors integrados
+              Pedí tu tema
             </h2>
             <p className="mt-3 text-sm leading-6 text-zinc-400">
-              La home ya puede consumir sponsors activos y mostrarlos sobre y
-              bajo la señal principal del canal.
+              Ya podés dejar tu canción, artista o dedicatoria para futuras
+              emisiones de 80&apos;s Forever.
             </p>
+
+            <a
+              href="/pedi-tu-tema"
+              className="mt-5 inline-flex rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/15"
+            >
+              Ir al formulario
+            </a>
           </div>
         </section>
       </div>
