@@ -79,7 +79,7 @@ export default async function HomePage() {
 
             <Link
               href="/contacto"
-              className="inline-flex rounded-xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white transition hover:bg-white/[0.04]"
+              className="inline-flex rounded-xl border border-orange-400/40 bg-orange-500/10 px-4 py-2 text-sm text-orange-300 shadow-[0_0_18px_rgba(249,115,22,0.18)] transition hover:border-orange-300/70 hover:bg-orange-500/15 hover:text-orange-200 hover:shadow-[0_0_24px_rgba(249,115,22,0.28)]"
             >
               Contacto
             </Link>

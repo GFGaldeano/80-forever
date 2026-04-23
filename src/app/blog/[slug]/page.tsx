@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getPublicBlogPostBySlug } from "@/lib/blog/get-public-blog-post-by-slug";
+import { siteConfig } from "@/lib/config/site";
+import { absoluteUrl, buildMetaDescription } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +28,57 @@ function buildParagraphs(content: string) {
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
+}
+
+export async function generateMetadata({
+  params,
+}: Readonly<BlogPostDetailPageProps>): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPublicBlogPostBySlug(slug);
+
+  if (!post) {
+    return {
+      title: `Post no encontrado | ${siteConfig.name}`,
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const description =
+    post.excerpt || buildMetaDescription(post.content, 160);
+
+  const title = `${post.title} | Blog | ${siteConfig.name}`;
+  const canonical = absoluteUrl(`/blog/${post.slug}`);
+  const imageUrl = post.cover_image_url || siteConfig.logoBannerUrl;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "article",
+      publishedTime: post.published_at || post.created_at,
+      images: [
+        {
+          url: imageUrl,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
 }
 
 export default async function BlogPostDetailPage({
