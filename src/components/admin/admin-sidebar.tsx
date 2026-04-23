@@ -8,6 +8,7 @@ import {
   Megaphone,
   Image as ImageIcon,
   Music2,
+  MessagesSquare,
   FileText,
   Settings,
 } from "lucide-react";
@@ -54,6 +55,12 @@ const navItems = [
     title: "Pedidos",
     href: "/admin/requests",
     icon: Music2,
+    enabled: true,
+  },
+  {
+    title: "Contacto",
+    href: "/admin/contact",
+    icon: MessagesSquare,
     enabled: true,
   },
   {

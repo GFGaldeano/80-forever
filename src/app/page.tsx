@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { PublicSponsorCarousel } from "@/components/sponsors/public-sponsor-carousel";
 import { PublicStreamPlayer } from "@/components/streaming/public-stream-player";
@@ -129,12 +130,21 @@ export default async function HomePage() {
               emisiones de 80&apos;s Forever.
             </p>
 
-            <a
-              href="/pedi-tu-tema"
-              className="mt-5 inline-flex rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/15"
-            >
-              Ir al formulario
-            </a>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                href="/pedi-tu-tema"
+                className="inline-flex rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/15"
+              >
+                Ir al formulario
+              </Link>
+
+              <Link
+                href="/contacto"
+                className="inline-flex rounded-xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white transition hover:bg-white/[0.04]"
+              >
+                Contacto
+              </Link>
+            </div>
           </div>
         </section>
       </div>
