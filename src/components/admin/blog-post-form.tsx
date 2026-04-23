@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Wand2 } from "lucide-react";
+import { ImagePlus, Save, Upload, Wand2, X } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -51,6 +51,7 @@ function getInitialState(initialPost?: AdminBlogPost | null): FormState {
     excerpt: initialPost?.excerpt ?? "",
     content: initialPost?.content ?? "",
     coverImageUrl: initialPost?.cover_image_url ?? "",
+    cloudinaryPublicId: initialPost?.cloudinary_public_id ?? "",
     publishedAt: toDateTimeLocal(initialPost?.published_at),
     isVisible: initialPost?.is_visible ?? true,
   };
@@ -60,11 +61,16 @@ export function BlogPostForm({
   initialPost = null,
 }: Readonly<BlogPostFormProps>) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [isPending, startTransition] = useTransition();
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const [form, setForm] = useState<FormState>(getInitialState(initialPost));
+  const [selectedFileName, setSelectedFileName] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [uploadErrorMessage, setUploadErrorMessage] = useState("");
 
   const isEditing = Boolean(initialPost?.id);
 
@@ -87,6 +93,75 @@ export function BlogPostForm({
       ...prev,
       slug: slugifyBlogTitle(prev.title),
     }));
+  };
+
+  const clearCover = () => {
+    setForm((prev) => ({
+      ...prev,
+      coverImageUrl: "",
+      cloudinaryPublicId: "",
+    }));
+
+    setSelectedFileName("");
+    setUploadErrorMessage("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleUploadCover = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setUploadErrorMessage("");
+    setSuccessMessage("");
+    setSelectedFileName(file.name);
+
+    if (!file.type.startsWith("image/")) {
+      setUploadErrorMessage("Seleccioná un archivo de imagen válido.");
+      return;
+    }
+
+    setIsUploadingCover(true);
+
+    try {
+      const payload = new FormData();
+      payload.append("file", file);
+
+      const response = await fetch("/api/blog/upload", {
+        method: "POST",
+        body: payload,
+      });
+
+      const data = (await response.json()) as {
+        secureUrl?: string;
+        publicId?: string;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error || "No se pudo subir la portada.");
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        coverImageUrl: data.secureUrl ?? "",
+        cloudinaryPublicId: data.publicId ?? "",
+      }));
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Error subiendo la portada del blog.";
+
+      setUploadErrorMessage(message);
+    } finally {
+      setIsUploadingCover(false);
+    }
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -135,6 +210,7 @@ export function BlogPostForm({
         excerpt: toNullable(parsed.data.excerpt),
         content: parsed.data.content,
         cover_image_url: toNullable(parsed.data.coverImageUrl),
+        cloudinary_public_id: toNullable(parsed.data.cloudinaryPublicId),
         published_at: parsed.data.publishedAt
           ? new Date(parsed.data.publishedAt).toISOString()
           : null,
@@ -178,6 +254,10 @@ export function BlogPostForm({
       }
 
       setForm(getInitialState(null));
+      setSelectedFileName("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       router.refresh();
     });
   };
@@ -240,15 +320,63 @@ export function BlogPostForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="coverImageUrl">Imagen de portada</Label>
-            <Input
-              id="coverImageUrl"
-              placeholder="https://..."
-              value={form.coverImageUrl}
-              onChange={(e) => setField("coverImageUrl")(e.target.value)}
-              className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
-            />
+          <div className="space-y-3">
+            <Label>Portada del post</Label>
+
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="inline-flex cursor-pointer items-center rounded-xl border border-white/10 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 transition hover:bg-zinc-900 hover:text-white">
+                    <ImagePlus className="mr-2 h-4 w-4" />
+                    Seleccionar imagen
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={handleUploadCover}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {isUploadingCover ? (
+                    <div className="inline-flex items-center rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300">
+                      <Upload className="mr-2 h-4 w-4 animate-pulse" />
+                      Subiendo portada...
+                    </div>
+                  ) : null}
+
+                  {form.coverImageUrl ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={clearCover}
+                      className="h-10 rounded-xl border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/15 hover:text-red-200"
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Quitar portada
+                    </Button>
+                  ) : null}
+                </div>
+
+                <p className="text-xs text-zinc-500">
+                  Formatos permitidos: JPG, PNG, WEBP o GIF. Tamaño máximo: 5 MB.
+                  Recomendado: imagen horizontal 21:9.
+                </p>
+
+                {selectedFileName ? (
+                  <p className="text-sm text-zinc-300">
+                    Archivo seleccionado:{" "}
+                    <span className="text-white">{selectedFileName}</span>
+                  </p>
+                ) : null}
+
+                {uploadErrorMessage ? (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {uploadErrorMessage}
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -317,7 +445,7 @@ export function BlogPostForm({
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || isUploadingCover}
               className="h-12 rounded-xl bg-white text-black hover:bg-zinc-200"
             >
               <Save className="mr-2 h-4 w-4" />

@@ -33,6 +33,11 @@ export const blogPostSchema = z.object({
     .refine((value) => !value || /^https?:\/\/.+/i.test(value), {
       message: "La URL de portada debe comenzar con http:// o https://",
     }),
+  cloudinaryPublicId: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal("")),
   publishedAt: z.string().trim().optional().or(z.literal("")),
   isVisible: z.boolean(),
 });

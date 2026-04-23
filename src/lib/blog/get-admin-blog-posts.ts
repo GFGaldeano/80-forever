@@ -7,6 +7,7 @@ export type AdminBlogPost = {
   excerpt: string | null;
   content: string;
   cover_image_url: string | null;
+  cloudinary_public_id: string | null;
   is_visible: boolean;
   published_at: string | null;
   created_by: string | null;
@@ -22,6 +23,7 @@ const BLOG_POST_SELECT = `
   excerpt,
   content,
   cover_image_url,
+  cloudinary_public_id,
   is_visible,
   published_at,
   created_by,
