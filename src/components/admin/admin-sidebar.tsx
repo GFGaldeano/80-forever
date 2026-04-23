@@ -48,7 +48,7 @@ const navItems = [
     title: "Assets",
     href: "/admin/assets",
     icon: ImageIcon,
-    enabled: false,
+    enabled: true,
   },
   {
     title: "Pedidos",
