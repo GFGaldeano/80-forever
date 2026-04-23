@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink, PencilLine } from "lucide-react";
 
 import type { AdminBlogPost } from "@/lib/blog/get-admin-blog-posts";
+import { DeleteBlogPostButton } from "@/components/admin/delete-blog-post-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -118,17 +119,24 @@ export function BlogPostsTable({
                   </TableCell>
 
                   <TableCell className="text-right">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="border-white/10 bg-zinc-950 text-zinc-200 hover:bg-zinc-900 hover:text-white"
-                    >
-                      <Link href={`/admin/blog?edit=${post.id}`}>
-                        <PencilLine className="mr-2 h-4 w-4" />
-                        Editar
-                      </Link>
-                    </Button>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="border-white/10 bg-zinc-950 text-zinc-200 hover:bg-zinc-900 hover:text-white"
+                      >
+                        <Link href={`/admin/blog?edit=${post.id}`}>
+                          <PencilLine className="mr-2 h-4 w-4" />
+                          Editar
+                        </Link>
+                      </Button>
+
+                      <DeleteBlogPostButton
+                        postId={post.id}
+                        postTitle={post.title}
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -1,4 +1,5 @@
-import { FileText } from "lucide-react";
+import Link from "next/link";
+import { FileText, Plus } from "lucide-react";
 
 import { BlogPostForm } from "@/components/admin/blog-post-form";
 import { BlogPostsTable } from "@/components/admin/blog-posts-table";
@@ -40,6 +41,16 @@ export default async function AdminBlogPage({
             anuncios de transmisión y contenido institucional del canal.
           </p>
         </div>
+
+        {postToEdit ? (
+          <Link
+            href="/admin/blog"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/15"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo post
+          </Link>
+        ) : null}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
