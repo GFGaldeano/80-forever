@@ -25,6 +25,7 @@ function getPageTitle(pathname: string) {
   if (pathname.startsWith("/admin/sponsors")) return "Sponsors";
   if (pathname.startsWith("/admin/assets")) return "Assets";
   if (pathname.startsWith("/admin/requests")) return "Pedidos";
+  if (pathname.startsWith("/admin/contact")) return "Contacto";
   if (pathname.startsWith("/admin/blog")) return "Blog";
   if (pathname.startsWith("/admin/settings")) return "Configuración";
 
