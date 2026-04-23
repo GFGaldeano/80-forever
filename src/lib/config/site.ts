@@ -5,4 +5,5 @@ export const siteConfig = {
     "https://res.cloudinary.com/dfoxsvhei/image/upload/v1776866578/80s-Forever-logo-1-1_atzijd.png",
   logoBannerUrl:
     "https://res.cloudinary.com/dfoxsvhei/image/upload/v1776899424/80s-Forever-logo-21-9-aspect-ratio_trgrqq.png",
+  whatsappCommunityUrl: "https://chat.whatsapp.com/Ko8jFPQ539dLHoNFaofEVt",
 } as const;
