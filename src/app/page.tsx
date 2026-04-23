@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 
 import { PublicSponsorCarousel } from "@/components/sponsors/public-sponsor-carousel";
 import { PublicStreamPlayer } from "@/components/streaming/public-stream-player";
@@ -91,7 +92,7 @@ export default async function HomePage() {
           </div>
         ) : null}
 
-        <section className="mt-10 grid gap-6 md:grid-cols-3">
+        <section className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-3xl border border-white/10 bg-zinc-950/70 p-6">
             <p className="text-xs uppercase tracking-[0.24em] text-zinc-500 [font-family:var(--font-orbitron)]">
               Concepto
@@ -145,6 +146,34 @@ export default async function HomePage() {
                 Contacto
               </Link>
             </div>
+          </div>
+
+          <div className="rounded-3xl border border-green-500/20 bg-zinc-950/70 p-6 shadow-[0_0_0_1px_rgba(34,197,94,0.06),0_0_40px_rgba(34,197,94,0.10)]">
+            <div className="inline-flex rounded-2xl border border-green-500/20 bg-green-500/10 p-3 text-green-400 shadow-[0_0_24px_rgba(34,197,94,0.18)]">
+              <MessageCircle className="h-6 w-6" />
+            </div>
+
+            <p className="mt-4 text-xs uppercase tracking-[0.24em] text-zinc-500 [font-family:var(--font-orbitron)]">
+              Comunidad
+            </p>
+
+            <h2 className="mt-3 text-xl font-semibold text-white">
+              Sumate a nuestra comunidad
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              Recibí avisos de transmisión, efemérides musicales, novedades del
+              canal y actualizaciones especiales de 80&apos;s Forever.
+            </p>
+
+            <a
+              href={siteConfig.whatsappCommunityUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 inline-flex rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-300 transition hover:bg-green-500/15"
+            >
+              Unirme por WhatsApp
+            </a>
           </div>
         </section>
       </div>
