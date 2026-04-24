@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode, MouseEvent } from "react";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import type { AnalyticsEventName } from "@/lib/validators/analytics";
@@ -41,7 +41,7 @@ export function TrackedLink({
   const pathname = usePathname();
   const external = isExternalHref(href) || target === "_blank";
 
-  const handleClick = (_event: MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = () =>  {
     trackEvent({
       eventName,
       pagePath: pathname || window.location.pathname,
