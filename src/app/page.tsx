@@ -2,6 +2,7 @@ import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 
 import { TrackedLink } from "@/components/analytics/tracked-link";
+import { StreamInteractionTracker } from "@/components/analytics/stream-interaction-tracker";
 import { PublicShell } from "@/components/layout/public-shell";
 import { PublicSponsorCarousel } from "@/components/sponsors/public-sponsor-carousel";
 import { PublicStreamPlayer } from "@/components/streaming/public-stream-player";
@@ -95,7 +96,12 @@ export default async function HomePage() {
         ) : null}
 
         <div className="mt-10">
-          <PublicStreamPlayer stream={stream} />
+          <StreamInteractionTracker
+            streamStatus={status}
+            streamTitle={stream?.title ?? null}
+          >
+            <PublicStreamPlayer stream={stream} />
+          </StreamInteractionTracker>
         </div>
 
         {bottomAssets.length ? (

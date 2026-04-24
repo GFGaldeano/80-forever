@@ -2,11 +2,12 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
+  Eye,
   FileText,
-  Globe,
   Image as ImageIcon,
   Megaphone,
   MessagesSquare,
+  MousePointerClick,
   Music2,
   Radio,
 } from "lucide-react";
@@ -20,12 +21,40 @@ import { StreamStatusBadge } from "@/components/streaming/stream-status-badge";
 import { getAdminDashboardSummary } from "@/lib/admin/get-dashboard-summary";
 import { getSiteAnalyticsSummary } from "@/lib/admin/get-site-analytics-summary";
 import { getSiteAnalyticsTrafficSeries } from "@/lib/admin/get-site-analytics-traffic-series";
+import { getTransmissionAnalyticsSummary } from "@/lib/admin/get-transmission-analytics-summary";
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("es-AR", {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+function formatTransmissionAction(action: string) {
+  switch (action) {
+    case "stream_block_view":
+      return "Vista del bloque";
+    case "stream_block_click":
+      return "Click en bloque";
+    default:
+      return action;
+  }
+}
+
+function formatTransmissionStatus(
+  status: "live" | "offline" | "upcoming" | "replay"
+) {
+  switch (status) {
+    case "live":
+      return "En vivo";
+    case "upcoming":
+      return "Próximo";
+    case "replay":
+      return "Replay";
+    case "offline":
+    default:
+      return "Offline";
+  }
 }
 
 const quickLinks = [
@@ -68,10 +97,11 @@ const quickLinks = [
 ];
 
 export default async function AdminDashboardPage() {
-  const [summary, analytics, trafficSeries] = await Promise.all([
+  const [summary, analytics, trafficSeries, transmission] = await Promise.all([
     getAdminDashboardSummary(),
     getSiteAnalyticsSummary(),
     getSiteAnalyticsTrafficSeries(),
+    getTransmissionAnalyticsSummary(),
   ]);
 
   const ctaChartData = [
@@ -97,6 +127,42 @@ export default async function AdminDashboardPage() {
     },
   ];
 
+  const transmissionStatusRows = [
+    {
+      key: "live",
+      label: "En vivo",
+      value: transmission.statusBreakdownLast30Days.live,
+      accent: "bg-emerald-400/80",
+      text: "text-emerald-300",
+    },
+    {
+      key: "upcoming",
+      label: "Próximo",
+      value: transmission.statusBreakdownLast30Days.upcoming,
+      accent: "bg-cyan-400/80",
+      text: "text-cyan-300",
+    },
+    {
+      key: "replay",
+      label: "Replay",
+      value: transmission.statusBreakdownLast30Days.replay,
+      accent: "bg-violet-400/80",
+      text: "text-violet-300",
+    },
+    {
+      key: "offline",
+      label: "Offline",
+      value: transmission.statusBreakdownLast30Days.offline,
+      accent: "bg-zinc-400/80",
+      text: "text-zinc-300",
+    },
+  ];
+
+  const transmissionMaxValue = Math.max(
+    ...transmissionStatusRows.map((row) => row.value),
+    1
+  );
+
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <div className="flex flex-col gap-4 border-b border-white/10 pb-6 md:flex-row md:items-start md:justify-between">
@@ -112,7 +178,7 @@ export default async function AdminDashboardPage() {
 
           <p className="mt-3 max-w-3xl text-sm text-zinc-400">
             Vista ejecutiva del estado del proyecto, operación editorial,
-            audiencia web y módulos activos del sistema.
+            audiencia web y comportamiento alrededor de la transmisión.
           </p>
         </div>
 
@@ -218,7 +284,7 @@ export default async function AdminDashboardPage() {
         </Card>
       </section>
 
-     <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr] xl:[&>*]:min-w-0">
+      <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr] xl:[&>*]:min-w-0">
         <SiteAnalyticsTrafficChart series={trafficSeries} />
         <SiteAnalyticsCTAChart data={ctaChartData} />
       </section>
@@ -228,33 +294,171 @@ export default async function AdminDashboardPage() {
 
         <Card className="border-white/10 bg-zinc-950/80 text-white">
           <CardHeader>
+            <CardTitle>Lectura de audiencia</CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-3 text-sm text-zinc-400">
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+              Ya tenemos una primera lectura real de navegación y comportamiento.
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+              Esto permite medir el peso del blog, contacto, pedidos y comunidad.
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+              El siguiente foco natural es entender qué cambia cuando hay transmisión.
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="border-white/10 bg-zinc-950/80 text-white">
+          <CardHeader>
             <CardTitle className="flex items-center gap-3">
-              <Globe className="h-5 w-5 text-cyan-300" />
-              Próxima capa
+              <Radio className="h-5 w-5 text-cyan-300" />
+              Señales de transmisión
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-200">
-              Ya tenemos fundación y charts de audiencia. El siguiente paso es
-              sumar series por transmisión, eventos del player y, cuando
-              convenga, integrar YouTube.
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                  Bloque visto hoy
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {transmission.blockViews.today}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                  Bloque visto 7 días
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {transmission.blockViews.last7Days}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                  Bloque visto 30 días
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {transmission.blockViews.last30Days}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                  Clicks bloque 30 días
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {transmission.blockClicks.last30Days}
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
-                • Picos durante transmisión
+            <div className="grid gap-4 md:grid-cols-[0.95fr_1.05fr]">
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                      Durante vivo
+                    </p>
+                    <p className="mt-3 text-3xl font-semibold text-emerald-300">
+                      {transmission.live.viewsLast30Days}
+                    </p>
+                    <p className="mt-2 text-sm text-zinc-400">
+                      Vistas del bloque con el canal en estado <span className="text-emerald-300">live</span> en los últimos 30 días.
+                    </p>
+                  </div>
+
+                  <div className="inline-flex rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-emerald-300">
+                    <Eye className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-xl border border-white/10 bg-black/40 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                    Participación del vivo
+                  </p>
+                  <p className="mt-2 text-xl font-semibold text-white">
+                    {transmission.live.shareLast30Days}%
+                  </p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
-                • Comparativa antes / durante / después del vivo
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
-                • CTR de sponsors y comunidad
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
-                • Integración con YouTube y lectura comercial
+
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="mb-4 flex items-center gap-2 text-sm font-medium text-white">
+                  <MousePointerClick className="h-4 w-4 text-cyan-300" />
+                  Distribución por estado del stream
+                </p>
+
+                <div className="space-y-4">
+                  {transmissionStatusRows.map((row) => (
+                    <div key={row.key}>
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <p className={`text-sm ${row.text}`}>{row.label}</p>
+                        <p className="text-sm text-zinc-400">{row.value}</p>
+                      </div>
+
+                      <div className="h-2 rounded-full bg-white/5">
+                        <div
+                          className={`h-2 rounded-full ${row.accent}`}
+                          style={{
+                            width:
+                              row.value > 0
+                                ? `${Math.max(
+                                    8,
+                                    (row.value / transmissionMaxValue) * 100
+                                  )}%`
+                                : "0%",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+
+            <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-200">
+              En esta fase medimos visualización e interacción del bloque del stream.
+              La interacción interna del reproductor de YouTube se integrará después.
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-white/10 bg-zinc-950/80 text-white">
+          <CardHeader>
+            <CardTitle>Actividad reciente del stream</CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            {transmission.recentInteractions.length ? (
+              transmission.recentInteractions.map((item, index) => (
+                <div
+                  key={`${item.occurred_at}-${item.action}-${index}`}
+                  className="rounded-2xl border border-white/10 bg-black/40 p-4"
+                >
+                  <p className="font-medium text-white">
+                    {formatTransmissionAction(item.action)}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    {item.title || "Sin título de transmisión"}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between gap-3 text-xs text-zinc-500">
+                    <span>{formatTransmissionStatus(item.status)}</span>
+                    <span>{formatDateTime(item.occurred_at)}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-zinc-400">
+                Todavía no hay actividad reciente del bloque de transmisión.
+              </p>
+            )}
           </CardContent>
         </Card>
       </section>
@@ -418,13 +622,13 @@ export default async function AdminDashboardPage() {
 
           <CardContent className="space-y-3 text-sm text-zinc-400">
             <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-              El dashboard ya combina operación editorial con audiencia real del sitio.
+              Ya medimos audiencia general, navegación y ahora también señales específicas del stream.
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-              Esto da base objetiva para decisiones de contenido, programación y valor comercial para sponsors.
+              Esto da base objetiva para correlacionar programación, vivo e interés del público.
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-              La próxima iteración debería enfocarse en transmisión y correlación entre tráfico y consumo del vivo.
+              El paso siguiente ideal es sumar eventos internos del reproductor y preparar integración con YouTube.
             </div>
           </CardContent>
         </Card>
