@@ -15,7 +15,9 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { OperationalAlertsPanel } from "@/components/admin/operational-alerts-panel";
 import { LaunchReadinessPanel } from "@/components/admin/launch-readiness-panel";
+import { buildOperationalAlerts } from "@/lib/automation/build-operational-alerts";
 import { getAdminBlogPosts } from "@/lib/blog/get-admin-blog-posts";
 import { buildLaunchReadinessReport } from "@/lib/readiness/build-launch-readiness-report";
 import { getSiteSettings } from "@/lib/settings/get-site-settings";
@@ -134,6 +136,15 @@ export default async function AdminDashboardPage() {
     ]);
 
   const readinessReport = buildLaunchReadinessReport({
+    settings,
+    streamConfig,
+    transmissions,
+    blogPosts,
+    sponsors,
+    sponsorAssets,
+  });
+
+  const operationalAlerts = buildOperationalAlerts({
     settings,
     streamConfig,
     transmissions,
@@ -268,6 +279,8 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
       </section>
+
+      <OperationalAlertsPanel alerts={operationalAlerts} />
 
       <LaunchReadinessPanel report={readinessReport} />
 
