@@ -11,8 +11,15 @@ import {
 } from "@/lib/blog/blog-category-theme";
 import { getBlogCategories } from "@/lib/blog/get-blog-categories";
 import { getPublicBlogPosts } from "@/lib/blog/get-public-blog-posts";
-import { siteConfig } from "@/lib/config/site";
-import { absoluteUrl } from "@/lib/seo";
+import {
+  buildAbsoluteSiteUrl,
+  getPublicSiteSeo,
+} from "@/lib/seo/get-public-site-seo";
+import {
+  buildBreadcrumbJsonLd,
+  buildCollectionPageJsonLd,
+  toJsonLd,
+} from "@/lib/seo/json-ld";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +54,7 @@ function formatDate(value?: string | null) {
 export async function generateMetadata({
   searchParams,
 }: Readonly<BlogPageProps>): Promise<Metadata> {
+  const seo = await getPublicSiteSeo();
   const resolvedSearchParams = (await searchParams) ?? {};
   const currentPage = getSafePage(resolvedSearchParams.page);
   const categorySlug = resolvedSearchParams.category?.trim();
@@ -57,15 +65,15 @@ export async function generateMetadata({
     : null;
 
   const titleBase = selectedCategory
-    ? `${selectedCategory.name} | Blog | ${siteConfig.name}`
-    : `Blog | ${siteConfig.name}`;
+    ? `${selectedCategory.name} | Blog | ${seo.siteName}`
+    : `Blog | ${seo.siteName}`;
 
   const title =
     currentPage > 1 ? `${titleBase} - Página ${currentPage}` : titleBase;
 
   const description = selectedCategory
-    ? `Explorá las publicaciones de ${selectedCategory.name.toLowerCase()} en el blog de ${siteConfig.name}.`
-    : `Explorá el blog de ${siteConfig.name}: efemérides musicales, novedades del canal, especiales temáticos y contenido editorial del universo 80's.`;
+    ? `Explorá las publicaciones de ${selectedCategory.name.toLowerCase()} en el blog de ${seo.siteName}.`
+    : `Explorá el blog de ${seo.siteName}: efemérides musicales, novedades del canal, especiales temáticos y contenido editorial del universo 80's.`;
 
   const params = new URLSearchParams();
   if (selectedCategory) {
@@ -75,7 +83,8 @@ export async function generateMetadata({
     params.set("page", String(currentPage));
   }
 
-  const canonical = absoluteUrl(
+  const canonical = buildAbsoluteSiteUrl(
+    seo.siteUrl,
     `/blog${params.toString() ? `?${params.toString()}` : ""}`
   );
 
@@ -92,10 +101,8 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: siteConfig.logoBannerUrl,
-          width: 1200,
-          height: 514,
-          alt: siteConfig.name,
+          url: seo.socialImageUrl,
+          alt: seo.siteName,
         },
       ],
     },
@@ -103,7 +110,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: [siteConfig.logoBannerUrl],
+      images: [seo.socialImageUrl],
     },
   };
 }
@@ -111,6 +118,7 @@ export async function generateMetadata({
 export default async function BlogPage({
   searchParams,
 }: Readonly<BlogPageProps>) {
+  const seo = await getPublicSiteSeo();
   const resolvedSearchParams = (await searchParams) ?? {};
   const currentPage = getSafePage(resolvedSearchParams.page);
   const categorySlug = resolvedSearchParams.category?.trim();
@@ -134,12 +142,56 @@ export default async function BlogPage({
     notFound();
   }
 
+  const pageUrl = buildAbsoluteSiteUrl(
+    seo.siteUrl,
+    `/blog${
+      resolvedSearchParams.category || currentPage > 1
+        ? `?${new URLSearchParams(
+            Object.entries({
+              ...(selectedCategory?.slug ? { category: selectedCategory.slug } : {}),
+              ...(currentPage > 1 ? { page: String(currentPage) } : {}),
+            })
+          ).toString()}`
+        : ""
+    }`
+  );
+
+  const collectionJsonLd = buildCollectionPageJsonLd({
+    name: selectedCategory
+      ? `Blog - ${selectedCategory.name}`
+      : `Blog - ${seo.siteName}`,
+    description: selectedCategory
+      ? `Publicaciones de ${selectedCategory.name.toLowerCase()} en el blog de ${seo.siteName}.`
+      : `Blog editorial de ${seo.siteName}.`,
+    url: pageUrl,
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    {
+      name: "Inicio",
+      url: buildAbsoluteSiteUrl(seo.siteUrl, "/"),
+    },
+    {
+      name: "Blog",
+      url: buildAbsoluteSiteUrl(seo.siteUrl, "/blog"),
+    },
+  ]);
+
   return (
     <PublicShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(collectionJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
+      />
+
       <div className="mx-auto max-w-6xl px-6 py-12 md:px-8">
         <header className="border-b border-white/10 pb-8 text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-zinc-500 [font-family:var(--font-orbitron)]">
-            {siteConfig.name}
+            {seo.siteName}
           </p>
 
           <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-5xl">

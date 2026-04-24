@@ -3,8 +3,15 @@ import type { Metadata } from "next";
 import { PublicShell } from "@/components/layout/public-shell";
 import { TrackedLink } from "@/components/analytics/tracked-link";
 import { getPublicTransmissions } from "@/lib/transmissions/get-public-transmissions";
-import { siteConfig } from "@/lib/config/site";
-import { absoluteUrl } from "@/lib/seo";
+import {
+  buildAbsoluteSiteUrl,
+  getPublicSiteSeo,
+} from "@/lib/seo/get-public-site-seo";
+import {
+  buildBreadcrumbJsonLd,
+  buildCollectionPageJsonLd,
+  toJsonLd,
+} from "@/lib/seo/json-ld";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +33,9 @@ function getTransmissionDateLabel(
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const title = `Transmisiones pasadas | ${siteConfig.name}`;
+  const seo = await getPublicSiteSeo();
+
+  const title = `Transmisiones pasadas | ${seo.siteName}`;
   const description =
     "Explorá el historial de transmisiones de 80's Forever, reviví emisiones anteriores y accedé a cada programa desde YouTube.";
 
@@ -34,19 +43,17 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     alternates: {
-      canonical: absoluteUrl("/transmisiones"),
+      canonical: buildAbsoluteSiteUrl(seo.siteUrl, "/transmisiones"),
     },
     openGraph: {
       title,
       description,
-      url: absoluteUrl("/transmisiones"),
+      url: buildAbsoluteSiteUrl(seo.siteUrl, "/transmisiones"),
       type: "website",
       images: [
         {
-          url: siteConfig.logoBannerUrl,
-          width: 1200,
-          height: 514,
-          alt: siteConfig.name,
+          url: seo.socialImageUrl,
+          alt: seo.siteName,
         },
       ],
     },
@@ -54,20 +61,50 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title,
       description,
-      images: [siteConfig.logoBannerUrl],
+      images: [seo.socialImageUrl],
     },
   };
 }
 
 export default async function TransmissionsPage() {
-  const transmissions = await getPublicTransmissions();
+  const [transmissions, seo] = await Promise.all([
+    getPublicTransmissions(),
+    getPublicSiteSeo(),
+  ]);
+
+  const collectionJsonLd = buildCollectionPageJsonLd({
+    name: `Transmisiones pasadas | ${seo.siteName}`,
+    description:
+      "Historial de transmisiones emitidas y archivadas para revivir desde YouTube.",
+    url: buildAbsoluteSiteUrl(seo.siteUrl, "/transmisiones"),
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    {
+      name: "Inicio",
+      url: buildAbsoluteSiteUrl(seo.siteUrl, "/"),
+    },
+    {
+      name: "Transmisiones",
+      url: buildAbsoluteSiteUrl(seo.siteUrl, "/transmisiones"),
+    },
+  ]);
 
   return (
     <PublicShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(collectionJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
+      />
+
       <div className="mx-auto max-w-6xl px-6 py-12 md:px-8">
         <header className="border-b border-white/10 pb-8 text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-zinc-500 [font-family:var(--font-orbitron)]">
-            {siteConfig.name}
+            {seo.siteName}
           </p>
 
           <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-5xl">

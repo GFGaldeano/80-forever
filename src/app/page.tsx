@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 
@@ -8,6 +9,15 @@ import { PublicSponsorCarousel } from "@/components/sponsors/public-sponsor-caro
 import { PublicStreamPlayer } from "@/components/streaming/public-stream-player";
 import { StreamStatusBadge } from "@/components/streaming/stream-status-badge";
 import { siteConfig } from "@/lib/config/site";
+import {
+  buildAbsoluteSiteUrl,
+  getPublicSiteSeo,
+} from "@/lib/seo/get-public-site-seo";
+import {
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+  toJsonLd,
+} from "@/lib/seo/json-ld";
 import { getPublicSponsorAssets } from "@/lib/sponsors/get-public-sponsor-assets";
 import { getPublicStreamConfig } from "@/lib/stream/get-public-stream-config";
 
@@ -29,13 +39,77 @@ function getHeroCopy(
   }
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getPublicSiteSeo();
+  const title = seo.defaultSeoTitle || seo.siteName;
+  const description = seo.defaultSeoDescription || seo.description;
+  const canonical = buildAbsoluteSiteUrl(seo.siteUrl, "/");
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "website",
+      images: [
+        {
+          url: seo.socialImageUrl,
+          alt: seo.siteName,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [seo.socialImageUrl],
+    },
+  };
+}
+
 export default async function HomePage() {
-  const stream = await getPublicStreamConfig();
-  const { topAssets, bottomAssets } = await getPublicSponsorAssets();
+  const [stream, sponsors, seo] = await Promise.all([
+    getPublicStreamConfig(),
+    getPublicSponsorAssets(),
+    getPublicSiteSeo(),
+  ]);
+
+  const { topAssets, bottomAssets } = sponsors;
   const status = stream?.status ?? "offline";
+
+  const organizationJsonLd = buildOrganizationJsonLd({
+    siteName: seo.siteName,
+    siteUrl: seo.siteUrl,
+    logoUrl: seo.logoUrl,
+    contactEmail: seo.contactEmail,
+    sameAs: [
+      seo.youtubeChannelUrl,
+      seo.whatsappCommunityUrl,
+    ].filter(Boolean),
+  });
+
+  const websiteJsonLd = buildWebSiteJsonLd({
+    siteName: seo.siteName,
+    siteUrl: seo.siteUrl,
+    description: seo.description,
+  });
 
   return (
     <PublicShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(organizationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(websiteJsonLd) }}
+      />
+
       <div className="mx-auto flex w-full max-w-7xl flex-col px-6 py-10 md:px-8 lg:px-10">
         <header className="flex flex-col items-center text-center">
           <div className="rounded-2xl bg-[#000000] px-2 py-2">
