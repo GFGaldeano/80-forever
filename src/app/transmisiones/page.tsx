@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 import { PublicShell } from "@/components/layout/public-shell";
 import { TrackedLink } from "@/components/analytics/tracked-link";
@@ -132,11 +133,13 @@ export default async function TransmissionsPage() {
                   className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70"
                 >
                   {transmission.youtube_thumbnail_url ? (
-                    <div className="aspect-[16/9] bg-black">
-                      <img
+                    <div className="relative aspect-[16/9] bg-black">
+                      <Image
                         src={transmission.youtube_thumbnail_url}
                         alt={transmission.title}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                        className="object-cover"
                       />
                     </div>
                   ) : null}

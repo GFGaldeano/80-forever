@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -53,8 +54,7 @@ function getInitialState(
   return {
     title: initialPost?.title ?? "",
     slug: initialPost?.slug ?? "",
-    categoryId:
-      initialPost?.category_id ?? categories[0]?.id ?? "",
+    categoryId: initialPost?.category_id ?? categories[0]?.id ?? "",
     excerpt: initialPost?.excerpt ?? "",
     content: initialPost?.content ?? "",
     coverImageUrl: initialPost?.cover_image_url ?? "",
@@ -447,11 +447,13 @@ export function BlogPostForm({
 
           {form.coverImageUrl ? (
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-black">
-              <div className="aspect-[21/9]">
-                <img
+              <div className="relative aspect-[21/9]">
+                <Image
                   src={form.coverImageUrl}
                   alt="Preview portada"
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 896px"
+                  className="object-cover"
                 />
               </div>
             </div>

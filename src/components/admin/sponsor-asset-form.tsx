@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -421,12 +422,14 @@ export function SponsorAssetForm({
 
         <CardContent className="space-y-5">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-black">
-            <div className="aspect-[21/9]">
+            <div className="relative aspect-[21/9]">
               {form.assetUrl ? (
-                <img
+                <Image
                   src={form.assetUrl}
                   alt="Preview asset"
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="(max-width: 1280px) 100vw, 40vw"
+                  className="object-cover"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-zinc-500">

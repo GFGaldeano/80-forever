@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   Eye,
@@ -138,12 +139,14 @@ export function TransmissionsTable({
                 >
                   <TableCell className="min-w-[360px]">
                     <div className="flex gap-4">
-                      <div className="h-20 w-36 overflow-hidden rounded-xl border border-white/10 bg-black">
+                      <div className="relative h-20 w-36 overflow-hidden rounded-xl border border-white/10 bg-black">
                         {transmission.youtube_thumbnail_url ? (
-                          <img
+                          <Image
                             src={transmission.youtube_thumbnail_url}
                             alt={transmission.title}
-                            className="h-full w-full object-cover"
+                            fill
+                            sizes="144px"
+                            className="object-cover"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center text-zinc-600">
