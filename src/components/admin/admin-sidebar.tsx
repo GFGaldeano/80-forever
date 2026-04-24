@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Radio,
+  Film,
   Megaphone,
   Image as ImageIcon,
   Music2,
@@ -37,6 +38,12 @@ const navItems = [
     title: "Transmisión",
     href: "/admin/stream",
     icon: Radio,
+    enabled: true,
+  },
+  {
+    title: "Transmisiones",
+    href: "/admin/transmissions",
+    icon: Film,
     enabled: true,
   },
   {
