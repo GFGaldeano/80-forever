@@ -15,7 +15,10 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { LaunchReadinessPanel } from "@/components/admin/launch-readiness-panel";
 import { getAdminBlogPosts } from "@/lib/blog/get-admin-blog-posts";
+import { buildLaunchReadinessReport } from "@/lib/readiness/build-launch-readiness-report";
+import { getSiteSettings } from "@/lib/settings/get-site-settings";
 import { getAdminSponsorAssets } from "@/lib/sponsors/get-admin-sponsor-assets";
 import { getAdminSponsors } from "@/lib/sponsors/get-admin-sponsors";
 import { getAdminStreamConfig } from "@/lib/stream/get-admin-stream-config";
@@ -93,9 +96,7 @@ function QuickLinkCard({
     <Card className="border-white/10 bg-zinc-950/80 text-white">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
-          <div
-            className={`inline-flex rounded-2xl border p-3 ${accentClass}`}
-          >
+          <div className={`inline-flex rounded-2xl border p-3 ${accentClass}`}>
             <Icon className="h-5 w-5" />
           </div>
 
@@ -122,14 +123,24 @@ function QuickLinkCard({
 }
 
 export default async function AdminDashboardPage() {
-  const [streamConfig, transmissions, blogPosts, sponsors, sponsorAssets] =
+  const [settings, streamConfig, transmissions, blogPosts, sponsors, sponsorAssets] =
     await Promise.all([
+      getSiteSettings().catch(() => null),
       getAdminStreamConfig().catch(() => null),
       getAdminTransmissions().catch(() => []),
       getAdminBlogPosts().catch(() => []),
       getAdminSponsors().catch(() => []),
       getAdminSponsorAssets().catch(() => []),
     ]);
+
+  const readinessReport = buildLaunchReadinessReport({
+    settings,
+    streamConfig,
+    transmissions,
+    blogPosts,
+    sponsors,
+    sponsorAssets,
+  });
 
   const transmissionsVisible = transmissions.filter((item) => item.is_visible).length;
   const transmissionsAired = transmissions.filter((item) => item.status === "aired").length;
@@ -167,10 +178,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button
-            asChild
-            className="bg-white text-black hover:bg-zinc-200"
-          >
+          <Button asChild className="bg-white text-black hover:bg-zinc-200">
             <Link href="/admin/transmissions">
               <Film className="mr-2 h-4 w-4" />
               Gestionar transmisiones
@@ -260,6 +268,8 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
       </section>
+
+      <LaunchReadinessPanel report={readinessReport} />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <QuickLinkCard
