@@ -6,7 +6,6 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   ExternalLink,
-  Link2,
   RefreshCw,
   Save,
   Wand2,
