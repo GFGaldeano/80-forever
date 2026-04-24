@@ -4,10 +4,31 @@ type BlogPaginationProps = {
   currentPage: number;
   totalPages: number;
   basePath?: string;
+  query?: Record<string, string | number | undefined>;
 };
 
-function buildPageHref(basePath: string, page: number) {
-  return page <= 1 ? basePath : `${basePath}?page=${page}`;
+function buildPageHref(
+  basePath: string,
+  page: number,
+  query?: Record<string, string | number | undefined>
+) {
+  const searchParams = new URLSearchParams();
+
+  if (query) {
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && String(value).length > 0) {
+        searchParams.set(key, String(value));
+      }
+    });
+  }
+
+  if (page > 1) {
+    searchParams.set("page", String(page));
+  }
+
+  const queryString = searchParams.toString();
+
+  return queryString ? `${basePath}?${queryString}` : basePath;
 }
 
 function getPageNumbers(currentPage: number, totalPages: number) {
@@ -41,6 +62,7 @@ export function BlogPagination({
   currentPage,
   totalPages,
   basePath = "/blog",
+  query,
 }: Readonly<BlogPaginationProps>) {
   if (totalPages <= 1) {
     return null;
@@ -55,7 +77,7 @@ export function BlogPagination({
     >
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Link
-          href={buildPageHref(basePath, currentPage - 1)}
+          href={buildPageHref(basePath, currentPage - 1, query)}
           aria-disabled={currentPage === 1}
           className={`inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm transition ${
             currentPage === 1
@@ -83,7 +105,7 @@ export function BlogPagination({
           return (
             <Link
               key={item}
-              href={buildPageHref(basePath, item)}
+              href={buildPageHref(basePath, item, query)}
               aria-current={isActive ? "page" : undefined}
               className={`inline-flex h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm transition ${
                 isActive
@@ -97,7 +119,7 @@ export function BlogPagination({
         })}
 
         <Link
-          href={buildPageHref(basePath, currentPage + 1)}
+          href={buildPageHref(basePath, currentPage + 1, query)}
           aria-disabled={currentPage === totalPages}
           className={`inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm transition ${
             currentPage === totalPages

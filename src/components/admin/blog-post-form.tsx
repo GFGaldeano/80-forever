@@ -12,6 +12,7 @@ import {
   type BlogPostInput,
 } from "@/lib/validators/blog-posts";
 import type { AdminBlogPost } from "@/lib/blog/get-admin-blog-posts";
+import type { BlogCategory } from "@/lib/blog/get-blog-categories";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 type BlogPostFormProps = {
   initialPost?: AdminBlogPost | null;
+  categories: BlogCategory[];
 };
 
 type FormState = BlogPostInput;
@@ -44,10 +46,15 @@ function toNullable(value?: string) {
   return trimmed.length ? trimmed : null;
 }
 
-function getInitialState(initialPost?: AdminBlogPost | null): FormState {
+function getInitialState(
+  initialPost: AdminBlogPost | null | undefined,
+  categories: BlogCategory[]
+): FormState {
   return {
     title: initialPost?.title ?? "",
     slug: initialPost?.slug ?? "",
+    categoryId:
+      initialPost?.category_id ?? categories[0]?.id ?? "",
     excerpt: initialPost?.excerpt ?? "",
     content: initialPost?.content ?? "",
     coverImageUrl: initialPost?.cover_image_url ?? "",
@@ -59,6 +66,7 @@ function getInitialState(initialPost?: AdminBlogPost | null): FormState {
 
 export function BlogPostForm({
   initialPost = null,
+  categories,
 }: Readonly<BlogPostFormProps>) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -66,7 +74,7 @@ export function BlogPostForm({
   const [isPending, startTransition] = useTransition();
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
-  const [form, setForm] = useState<FormState>(getInitialState(initialPost));
+  const [form, setForm] = useState<FormState>(getInitialState(initialPost, categories));
   const [selectedFileName, setSelectedFileName] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -207,6 +215,7 @@ export function BlogPostForm({
       const payload = {
         title: parsed.data.title,
         slug: parsed.data.slug,
+        category_id: parsed.data.categoryId,
         excerpt: toNullable(parsed.data.excerpt),
         content: parsed.data.content,
         cover_image_url: toNullable(parsed.data.coverImageUrl),
@@ -253,7 +262,7 @@ export function BlogPostForm({
         return;
       }
 
-      setForm(getInitialState(null));
+      setForm(getInitialState(null, categories));
       setSelectedFileName("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -307,6 +316,26 @@ export function BlogPostForm({
                 Generar
               </Button>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="categoryId">Categoría</Label>
+            <select
+              id="categoryId"
+              value={form.categoryId}
+              onChange={(e) => setField("categoryId")(e.target.value)}
+              className="flex h-12 w-full rounded-xl border border-white/10 bg-black/60 px-3 text-sm text-white outline-none transition focus:border-cyan-500/50"
+            >
+              {categories.map((category) => (
+                <option
+                  key={category.id}
+                  value={category.id}
+                  className="bg-zinc-950"
+                >
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">

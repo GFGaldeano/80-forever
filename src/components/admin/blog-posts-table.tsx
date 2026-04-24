@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink, PencilLine } from "lucide-react";
 
 import type { AdminBlogPost } from "@/lib/blog/get-admin-blog-posts";
+import { getBlogCategoryBadgeClass } from "@/lib/blog/blog-category-theme";
 import { DeleteBlogPostButton } from "@/components/admin/delete-blog-post-button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -61,6 +62,7 @@ export function BlogPostsTable({
             <TableHeader>
               <TableRow className="border-white/10 hover:bg-transparent">
                 <TableHead className="text-zinc-400">Post</TableHead>
+                <TableHead className="text-zinc-400">Categoría</TableHead>
                 <TableHead className="text-zinc-400">Slug</TableHead>
                 <TableHead className="text-zinc-400">Visible</TableHead>
                 <TableHead className="text-zinc-400">Publicado</TableHead>
@@ -84,6 +86,16 @@ export function BlogPostsTable({
                         </p>
                       ) : null}
                     </div>
+                  </TableCell>
+
+                  <TableCell>
+                    {post.category ? (
+                      <Badge className={getBlogCategoryBadgeClass(post.category.slug)}>
+                        {post.category.name}
+                      </Badge>
+                    ) : (
+                      <span className="text-zinc-500">—</span>
+                    )}
                   </TableCell>
 
                   <TableCell className="text-zinc-300">{post.slug}</TableCell>

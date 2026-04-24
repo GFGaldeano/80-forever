@@ -4,6 +4,7 @@ import { FileText, Plus } from "lucide-react";
 import { BlogPostForm } from "@/components/admin/blog-post-form";
 import { BlogPostsTable } from "@/components/admin/blog-posts-table";
 import { getAdminBlogPosts } from "@/lib/blog/get-admin-blog-posts";
+import { getBlogCategories } from "@/lib/blog/get-blog-categories";
 
 type AdminBlogPageProps = {
   searchParams?: Promise<{
@@ -14,7 +15,11 @@ type AdminBlogPageProps = {
 export default async function AdminBlogPage({
   searchParams,
 }: Readonly<AdminBlogPageProps>) {
-  const posts = await getAdminBlogPosts();
+  const [posts, categories] = await Promise.all([
+    getAdminBlogPosts(),
+    getBlogCategories(),
+  ]);
+
   const resolvedSearchParams = (await searchParams) ?? {};
   const editId = resolvedSearchParams.edit;
 
@@ -54,7 +59,7 @@ export default async function AdminBlogPage({
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <BlogPostForm initialPost={postToEdit} />
+        <BlogPostForm initialPost={postToEdit} categories={categories} />
         <BlogPostsTable posts={posts} />
       </div>
     </div>

@@ -3,9 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BlogPagination } from "@/components/blog/blog-pagination";
+import { getBlogCategoryBadgeClass, getBlogCategoryFilterClass } from "@/lib/blog/blog-category-theme";
+import { getBlogCategories } from "@/lib/blog/get-blog-categories";
 import { getPublicBlogPosts } from "@/lib/blog/get-public-blog-posts";
 import { siteConfig } from "@/lib/config/site";
 import { absoluteUrl } from "@/lib/seo";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +17,7 @@ const BLOG_POSTS_PER_PAGE = 6;
 type BlogPageProps = {
   searchParams?: Promise<{
     page?: string;
+    category?: string;
   }>;
 };
 
@@ -41,19 +45,33 @@ export async function generateMetadata({
 }: Readonly<BlogPageProps>): Promise<Metadata> {
   const resolvedSearchParams = (await searchParams) ?? {};
   const currentPage = getSafePage(resolvedSearchParams.page);
+  const categorySlug = resolvedSearchParams.category?.trim();
+
+  const categories = await getBlogCategories();
+  const selectedCategory = categorySlug
+    ? categories.find((category) => category.slug === categorySlug)
+    : null;
+
+  const titleBase = selectedCategory
+    ? `${selectedCategory.name} | Blog | ${siteConfig.name}`
+    : `Blog | ${siteConfig.name}`;
 
   const title =
-    currentPage > 1
-      ? `Blog - Página ${currentPage} | ${siteConfig.name}`
-      : `Blog | ${siteConfig.name}`;
+    currentPage > 1 ? `${titleBase} - Página ${currentPage}` : titleBase;
 
-  const description =
-    currentPage > 1
-      ? `Explorá la página ${currentPage} del blog de ${siteConfig.name}: efemérides musicales, novedades del canal y especiales temáticos.`
-      : `Explorá el blog de ${siteConfig.name}: efemérides musicales, novedades del canal, especiales temáticos y contenido editorial del universo 80's.`;
+  const description = selectedCategory
+    ? `Explorá las publicaciones de ${selectedCategory.name.toLowerCase()} en el blog de ${siteConfig.name}.`
+    : `Explorá el blog de ${siteConfig.name}: efemérides musicales, novedades del canal, especiales temáticos y contenido editorial del universo 80's.`;
 
-  const canonical =
-    currentPage > 1 ? absoluteUrl(`/blog?page=${currentPage}`) : absoluteUrl("/blog");
+  const params = new URLSearchParams();
+  if (selectedCategory) {
+    params.set("category", selectedCategory.slug);
+  }
+  if (currentPage > 1) {
+    params.set("page", String(currentPage));
+  }
+
+  const canonical = absoluteUrl(`/blog${params.toString() ? `?${params.toString()}` : ""}`);
 
   return {
     title,
@@ -89,13 +107,24 @@ export default async function BlogPage({
 }: Readonly<BlogPageProps>) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const currentPage = getSafePage(resolvedSearchParams.page);
+  const categorySlug = resolvedSearchParams.category?.trim();
+
+  const categories = await getBlogCategories();
+  const selectedCategory = categorySlug
+    ? categories.find((category) => category.slug === categorySlug)
+    : null;
+
+  if (categorySlug && !selectedCategory) {
+    notFound();
+  }
 
   const { posts, totalCount, totalPages } = await getPublicBlogPosts({
     page: currentPage,
     pageSize: BLOG_POSTS_PER_PAGE,
+    categoryId: selectedCategory?.id,
   });
 
-  if (totalCount > 0 && currentPage > totalPages) {
+  if (currentPage > 1 && (totalCount === 0 || currentPage > totalPages)) {
     notFound();
   }
 
@@ -129,6 +158,30 @@ export default async function BlogPage({
             Efemérides musicales, novedades del canal, especiales temáticos y
             contenido editorial de 80&apos;s Forever.
           </p>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/blog"
+              className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass({
+                active: !selectedCategory,
+              })}`}
+            >
+              Todas
+            </Link>
+
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/blog?category=${category.slug}`}
+                className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass({
+                  slug: category.slug,
+                  active: selectedCategory?.slug === category.slug,
+                })}`}
+              >
+                {category.name}
+              </Link>
+            ))}
+          </div>
         </header>
 
         <section className="mt-10 grid gap-8 lg:grid-cols-2">
@@ -149,9 +202,17 @@ export default async function BlogPage({
                 ) : null}
 
                 <div className="p-6">
-                  <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                    {formatDate(post.published_at || post.created_at)}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {post.category ? (
+                      <Badge className={getBlogCategoryBadgeClass(post.category.slug)}>
+                        {post.category.name}
+                      </Badge>
+                    ) : null}
+
+                    <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+                      {formatDate(post.published_at || post.created_at)}
+                    </p>
+                  </div>
 
                   <h2 className="mt-3 text-2xl font-semibold text-white">
                     {post.title}
@@ -172,13 +233,21 @@ export default async function BlogPage({
             ))
           ) : (
             <div className="rounded-3xl border border-dashed border-white/10 bg-black/30 px-6 py-12 text-center text-zinc-400 lg:col-span-2">
-              Todavía no hay publicaciones visibles en el blog.
+              {selectedCategory
+                ? `Todavía no hay publicaciones visibles en ${selectedCategory.name.toLowerCase()}.`
+                : "Todavía no hay publicaciones visibles en el blog."}
             </div>
           )}
         </section>
 
         {posts.length ? (
-          <BlogPagination currentPage={currentPage} totalPages={totalPages} />
+          <BlogPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            query={{
+              category: selectedCategory?.slug,
+            }}
+          />
         ) : null}
       </div>
     </main>

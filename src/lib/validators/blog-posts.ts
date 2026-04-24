@@ -14,6 +14,7 @@ export const blogPostSchema = z.object({
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       "El slug debe usar minúsculas, números y guiones."
     ),
+  categoryId: z.string().uuid("Seleccioná una categoría válida."),
   excerpt: z
     .string()
     .trim()

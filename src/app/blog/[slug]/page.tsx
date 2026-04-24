@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getBlogCategoryBadgeClass } from "@/lib/blog/blog-category-theme";
 import { getPublicBlogPostBySlug } from "@/lib/blog/get-public-blog-post-by-slug";
 import { siteConfig } from "@/lib/config/site";
 import { absoluteUrl, buildMetaDescription } from "@/lib/seo";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -109,9 +111,17 @@ export default async function BlogPostDetailPage({
         </Link>
 
         <header className="mt-8 border-b border-white/10 pb-8">
-          <p className="text-xs uppercase tracking-[0.28em] text-zinc-500 [font-family:var(--font-orbitron)]">
-            {formatDate(post.published_at || post.created_at)}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            {post.category ? (
+              <Badge className={getBlogCategoryBadgeClass(post.category.slug)}>
+                {post.category.name}
+              </Badge>
+            ) : null}
+
+            <p className="text-xs uppercase tracking-[0.28em] text-zinc-500 [font-family:var(--font-orbitron)]">
+              {formatDate(post.published_at || post.created_at)}
+            </p>
+          </div>
 
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">
             {post.title}
@@ -121,6 +131,17 @@ export default async function BlogPostDetailPage({
             <p className="mt-5 text-base leading-8 text-zinc-400">
               {post.excerpt}
             </p>
+          ) : null}
+
+          {post.category ? (
+            <div className="mt-5">
+              <Link
+                href={`/blog?category=${post.category.slug}`}
+                className="inline-flex rounded-xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white transition hover:bg-white/[0.04]"
+              >
+                Ver más de {post.category.name}
+              </Link>
+            </div>
           ) : null}
         </header>
 
