@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 
+import { PublicShell } from "@/components/layout/public-shell";
 import { PublicSponsorCarousel } from "@/components/sponsors/public-sponsor-carousel";
 import { PublicStreamPlayer } from "@/components/streaming/public-stream-player";
 import { StreamStatusBadge } from "@/components/streaming/stream-status-badge";
@@ -33,14 +34,8 @@ export default async function HomePage() {
   const status = stream?.status ?? "offline";
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#000000] text-white">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-24 h-72 w-72 -translate-x-1/2 rounded-full bg-fuchsia-500/5 blur-3xl" />
-        <div className="absolute bottom-20 left-1/4 h-64 w-64 rounded-full bg-cyan-500/5 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.03),transparent_40%)]" />
-      </div>
-
-      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-10 md:px-8 lg:px-10">
+    <PublicShell>
+      <div className="mx-auto flex w-full max-w-7xl flex-col px-6 py-10 md:px-8 lg:px-10">
         <header className="flex flex-col items-center text-center">
           <div className="rounded-2xl bg-[#000000] px-2 py-2">
             <Image
@@ -186,6 +181,6 @@ export default async function HomePage() {
           </div>
         </section>
       </div>
-    </main>
+    </PublicShell>
   );
 }
