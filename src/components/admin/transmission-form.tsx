@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Link2, Save, Wand2 } from "lucide-react";
+import { ExternalLink, Link2, RefreshCw, Save, Wand2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import type { AdminTransmission } from "@/lib/transmissions/get-admin-transmissions";
@@ -32,6 +32,18 @@ type TransmissionFormProps = {
 
 type FormState = TransmissionInput;
 
+type SyncedYouTubeMetadata = {
+  videoId: string;
+  watchUrl: string;
+  embedUrl: string;
+  thumbnailUrl: string;
+  title: string | null;
+  authorName: string | null;
+  authorUrl: string | null;
+  source: "youtube_oembed" | "parsed_url" | "saved";
+  syncedAt: string;
+};
+
 function toDateTimeLocal(value?: string | null) {
   if (!value) return "";
 
@@ -45,7 +57,9 @@ function toNullable(value?: string) {
   return trimmed.length ? trimmed : null;
 }
 
-function getInitialState(initialTransmission?: AdminTransmission | null): FormState {
+function getInitialState(
+  initialTransmission?: AdminTransmission | null,
+): FormState {
   return {
     episodeCode: initialTransmission?.episode_code ?? "",
     title: initialTransmission?.title ?? "",
@@ -56,6 +70,27 @@ function getInitialState(initialTransmission?: AdminTransmission | null): FormSt
     scheduledAt: toDateTimeLocal(initialTransmission?.scheduled_at),
     airedAt: toDateTimeLocal(initialTransmission?.aired_at),
     isVisible: initialTransmission?.is_visible ?? false,
+  };
+}
+
+function getInitialSyncedMetadata(
+  initialTransmission?: AdminTransmission | null,
+): SyncedYouTubeMetadata | null {
+  if (!initialTransmission?.youtube_video_id) {
+    return null;
+  }
+
+  return {
+    videoId: initialTransmission.youtube_video_id,
+    watchUrl: initialTransmission.youtube_watch_url,
+    embedUrl: initialTransmission.youtube_embed_url,
+    thumbnailUrl: initialTransmission.youtube_thumbnail_url,
+    title: initialTransmission.youtube_title,
+    authorName: initialTransmission.youtube_author_name,
+    authorUrl: initialTransmission.youtube_author_url,
+    source: "saved",
+    syncedAt:
+      initialTransmission.youtube_last_synced_at ?? new Date().toISOString(),
   };
 }
 
@@ -78,8 +113,15 @@ export function TransmissionForm({
 }: Readonly<TransmissionFormProps>) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const [form, setForm] = useState<FormState>(getInitialState(initialTransmission));
+  const [form, setForm] = useState<FormState>(
+    getInitialState(initialTransmission),
+  );
+  const [syncedMetadata, setSyncedMetadata] =
+    useState<SyncedYouTubeMetadata | null>(
+      getInitialSyncedMetadata(initialTransmission),
+    );
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -87,12 +129,12 @@ export function TransmissionForm({
 
   const formTitle = useMemo(
     () => (isEditing ? "Editar transmisión" : "Nueva transmisión"),
-    [isEditing]
+    [isEditing],
   );
 
   const youtubePreview = useMemo(
     () => parseYouTubeVideo(form.youtubeUrl),
-    [form.youtubeUrl]
+    [form.youtubeUrl],
   );
 
   const setField =
@@ -104,11 +146,103 @@ export function TransmissionForm({
       }));
     };
 
+  const setYoutubeUrl = (value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      youtubeUrl: value,
+    }));
+
+    const parsed = parseYouTubeVideo(value);
+
+    if (!parsed) {
+      setSyncedMetadata(null);
+      return;
+    }
+
+    setSyncedMetadata((current) => {
+      if (!current) return null;
+      return current.videoId === parsed.videoId ? current : null;
+    });
+  };
+
   const generateSlug = () => {
     setForm((prev) => ({
       ...prev,
       slug: slugifyTransmissionTitle(prev.title),
     }));
+  };
+
+  const handleSyncYouTubeMetadata = async () => {
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (!form.youtubeUrl.trim()) {
+      setErrorMessage("Ingresá primero una URL de YouTube.");
+      return;
+    }
+
+    setIsSyncing(true);
+
+    try {
+      const response = await fetch("/api/youtube/metadata", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          youtubeUrl: form.youtubeUrl,
+        }),
+      });
+
+      const rawText = await response.text();
+      const json = rawText
+        ? (JSON.parse(rawText) as {
+            error?: string;
+            data?: SyncedYouTubeMetadata;
+          })
+        : {};
+
+      if (!response.ok || !json.data) {
+        setErrorMessage(
+          json.error ?? "No se pudo sincronizar la metadata de YouTube.",
+        );
+        return;
+      }
+
+      const metadata = json.data;
+
+      setSyncedMetadata(metadata);
+
+      setForm((prev) => {
+        const nextTitle =
+          prev.title.trim().length === 0 && metadata.title
+            ? metadata.title
+            : prev.title;
+
+        const nextSlug =
+          prev.slug.trim().length === 0 && nextTitle.trim().length > 0
+            ? slugifyTransmissionTitle(nextTitle)
+            : prev.slug;
+
+        return {
+          ...prev,
+          youtubeUrl: metadata.watchUrl,
+          title: nextTitle,
+          slug: nextSlug,
+        };
+      });
+
+      setSuccessMessage(
+        metadata.source === "youtube_oembed"
+          ? "Metadata sincronizada desde YouTube."
+          : "URL normalizada y metadata base actualizada.",
+      );
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("No se pudo sincronizar la metadata de YouTube.");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -121,7 +255,7 @@ export function TransmissionForm({
 
     if (!parsed.success) {
       setErrorMessage(
-        parsed.error.issues[0]?.message ?? "Revisá los datos ingresados."
+        parsed.error.issues[0]?.message ?? "Revisá los datos ingresados.",
       );
       return;
     }
@@ -132,6 +266,9 @@ export function TransmissionForm({
       setErrorMessage("No se pudo procesar la URL de YouTube.");
       return;
     }
+
+    const metadataMatchesCurrentVideo =
+      syncedMetadata?.videoId === youtubeData.videoId;
 
     startTransition(async () => {
       const supabase = createClient();
@@ -155,7 +292,7 @@ export function TransmissionForm({
 
       if (adminError || !adminProfile) {
         setErrorMessage(
-          "No se encontró un perfil administrativo activo para esta sesión."
+          "No se encontró un perfil administrativo activo para esta sesión.",
         );
         return;
       }
@@ -165,11 +302,30 @@ export function TransmissionForm({
         title: parsed.data.title,
         slug: parsed.data.slug,
         description: toNullable(parsed.data.description),
-        youtube_url: parsed.data.youtubeUrl,
+        youtube_url: youtubeData.watchUrl,
         youtube_video_id: youtubeData.videoId,
         youtube_watch_url: youtubeData.watchUrl,
         youtube_embed_url: youtubeData.embedUrl,
-        youtube_thumbnail_url: youtubeData.thumbnailUrl,
+        youtube_thumbnail_url:
+          syncedMetadata?.thumbnailUrl && metadataMatchesCurrentVideo
+            ? syncedMetadata.thumbnailUrl
+            : youtubeData.thumbnailUrl,
+        youtube_title:
+          metadataMatchesCurrentVideo && syncedMetadata?.title
+            ? syncedMetadata.title
+            : null,
+        youtube_author_name:
+          metadataMatchesCurrentVideo && syncedMetadata?.authorName
+            ? syncedMetadata.authorName
+            : null,
+        youtube_author_url:
+          metadataMatchesCurrentVideo && syncedMetadata?.authorUrl
+            ? syncedMetadata.authorUrl
+            : null,
+        youtube_last_synced_at:
+          metadataMatchesCurrentVideo && syncedMetadata?.syncedAt
+            ? syncedMetadata.syncedAt
+            : null,
         status: parsed.data.status,
         scheduled_at: parsed.data.scheduledAt
           ? new Date(parsed.data.scheduledAt).toISOString()
@@ -208,7 +364,7 @@ export function TransmissionForm({
       setSuccessMessage(
         isEditing
           ? "Transmisión actualizada correctamente."
-          : "Transmisión creada correctamente."
+          : "Transmisión creada correctamente.",
       );
 
       if (isEditing) {
@@ -218,6 +374,7 @@ export function TransmissionForm({
       }
 
       setForm(getInitialState(null));
+      setSyncedMetadata(null);
       router.refresh();
     });
   };
@@ -227,8 +384,8 @@ export function TransmissionForm({
       <CardHeader>
         <CardTitle className="text-xl">{formTitle}</CardTitle>
         <CardDescription className="text-zinc-400">
-          Cargá la base editorial de cada emisión y dejá lista la información para
-          el futuro historial público de transmisiones.
+          Cargá la base editorial de cada emisión y sincronizá metadata básica
+          desde YouTube para reducir trabajo manual.
         </CardDescription>
       </CardHeader>
 
@@ -252,21 +409,25 @@ export function TransmissionForm({
                 id="status"
                 value={form.status}
                 onChange={(e) =>
-                  setField("status")(e.target.value as TransmissionInput["status"])
+                  setField("status")(
+                    e.target.value as TransmissionInput["status"],
+                  )
                 }
                 className="flex h-12 w-full rounded-xl border border-white/10 bg-black/60 px-3 text-sm text-white outline-none transition focus:border-cyan-500/50"
               >
-                {(["draft", "scheduled", "aired", "archived"] as const).map((status) => (
-                  <option key={status} value={status} className="bg-zinc-950">
-                    {getStatusLabel(status)}
-                  </option>
-                ))}
+                {(["draft", "scheduled", "aired", "archived"] as const).map(
+                  (status) => (
+                    <option key={status} value={status} className="bg-zinc-950">
+                      {getStatusLabel(status)}
+                    </option>
+                  ),
+                )}
               </select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Título</Label>
+            <Label htmlFor="title">Título editorial</Label>
             <Input
               id="title"
               placeholder="Ej. 80's Forever - E01 - 24/06/2026"
@@ -312,15 +473,32 @@ export function TransmissionForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="youtubeUrl">URL de YouTube</Label>
-            <Input
-              id="youtubeUrl"
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={form.youtubeUrl}
-              onChange={(e) => setField("youtubeUrl")(e.target.value)}
-              className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
-            />
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <div className="space-y-2">
+              <Label htmlFor="youtubeUrl">URL de YouTube</Label>
+              <Input
+                id="youtubeUrl"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={form.youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSyncing}
+                onClick={handleSyncYouTubeMetadata}
+                className="h-12 rounded-xl border-cyan-500/20 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-200"
+              >
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`}
+                />
+                {isSyncing ? "Sincronizando..." : "Sincronizar"}
+              </Button>
+            </div>
           </div>
 
           {youtubePreview ? (
@@ -333,8 +511,29 @@ export function TransmissionForm({
                 <div className="space-y-2 text-sm">
                   <p className="text-cyan-200">
                     Video ID detectado:{" "}
-                    <span className="font-medium">{youtubePreview.videoId}</span>
+                    <span className="font-medium">
+                      {youtubePreview.videoId}
+                    </span>
                   </p>
+
+                  {syncedMetadata?.title ? (
+                    <p className="text-white">
+                      Título YouTube:{" "}
+                      <span className="font-medium">
+                        {syncedMetadata.title}
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="text-zinc-300">
+                      Título YouTube: no sincronizado todavía.
+                    </p>
+                  )}
+
+                  {syncedMetadata?.authorName ? (
+                    <p className="text-zinc-300">
+                      Canal: {syncedMetadata.authorName}
+                    </p>
+                  ) : null}
 
                   <div className="flex flex-wrap gap-3">
                     <a
@@ -361,6 +560,19 @@ export function TransmissionForm({
                   <p className="text-xs text-zinc-400 break-all">
                     Embed: {youtubePreview.embedUrl}
                   </p>
+
+                  {syncedMetadata?.syncedAt ? (
+                    <p
+                      className="text-xs text-zinc-500"
+                      suppressHydrationWarning
+                    >
+                      Última sincronización:{" "}
+                      {new Intl.DateTimeFormat("es-AR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(new Date(syncedMetadata.syncedAt))}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -406,7 +618,7 @@ export function TransmissionForm({
                 Hacer visible la transmisión
               </p>
               <p className="text-xs text-zinc-400">
-                Cuando armemos el historial público, esta transmisión podrá mostrarse.
+                Esta transmisión podrá mostrarse en el historial público.
               </p>
             </div>
           </label>
@@ -435,8 +647,8 @@ export function TransmissionForm({
               {isPending
                 ? "Guardando..."
                 : isEditing
-                ? "Guardar cambios"
-                : "Crear transmisión"}
+                  ? "Guardar cambios"
+                  : "Crear transmisión"}
             </Button>
 
             {isEditing ? (
