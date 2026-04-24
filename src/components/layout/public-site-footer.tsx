@@ -3,25 +3,6 @@ import { MessageCircle } from "lucide-react";
 
 import { siteConfig } from "@/lib/config/site";
 
-const footerLinks = [
-  {
-    label: "Inicio",
-    href: "/",
-  },
-  {
-    label: "Blog",
-    href: "/blog",
-  },
-  {
-    label: "Pedí tu tema",
-    href: "/pedi-tu-tema",
-  },
-  {
-    label: "Contacto",
-    href: "/contacto",
-  },
-];
-
 export function PublicSiteFooter() {
   return (
     <footer className="border-t border-white/10 bg-black/60">
@@ -31,9 +12,11 @@ export function PublicSiteFooter() {
             <p className="text-xs uppercase tracking-[0.26em] text-zinc-500 [font-family:var(--font-orbitron)]">
               {siteConfig.name}
             </p>
+
             <h2 className="mt-3 text-xl font-semibold text-white">
               {siteConfig.slogan}
             </h2>
+
             <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
               Canal temático de streaming musical con identidad retro-premium,
               contenido editorial, participación de la audiencia y comunidad
@@ -41,25 +24,45 @@ export function PublicSiteFooter() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <p className="text-sm font-medium text-white">Explorar</p>
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+              Explorar
+            </p>
 
-            <div className="flex flex-wrap gap-3">
-              {footerLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="inline-flex rounded-xl border border-white/10 bg-black/40 px-4 py-2 text-sm text-white transition hover:bg-white/[0.04]"
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/"
+                className="inline-flex items-center rounded-xl border border-fuchsia-500/30 bg-fuchsia-500/10 px-4 py-2 text-sm font-medium text-fuchsia-300 transition hover:bg-fuchsia-500/20 hover:text-fuchsia-200 hover:shadow-[0_0_16px_rgba(217,70,239,0.35)]"
+              >
+                Inicio
+              </Link>
+
+              <Link
+                href="/blog"
+                className="inline-flex items-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20 hover:text-cyan-200 hover:shadow-[0_0_16px_rgba(34,211,238,0.35)]"
+              >
+                Blog
+              </Link>
+
+              <Link
+                href="/pedi-tu-tema"
+                className="inline-flex items-center rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-300 transition hover:bg-violet-500/20 hover:text-violet-200 hover:shadow-[0_0_16px_rgba(139,92,246,0.35)]"
+              >
+                Pedí tu tema
+              </Link>
+
+              <Link
+                href="/contacto"
+                className="inline-flex items-center rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-2 text-sm font-medium text-orange-300 transition hover:bg-orange-500/20 hover:text-orange-200 hover:shadow-[0_0_16px_rgba(249,115,22,0.35)]"
+              >
+                Contacto
+              </Link>
 
               <a
                 href={siteConfig.whatsappCommunityUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-300 transition hover:bg-green-500/15"
+                className="inline-flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm font-medium text-green-300 transition hover:bg-green-500/20 hover:text-green-200 hover:shadow-[0_0_16px_rgba(34,197,94,0.35)]"
               >
                 <MessageCircle className="h-4 w-4" />
                 Comunidad
@@ -69,7 +72,10 @@ export function PublicSiteFooter() {
         </div>
 
         <div className="flex flex-col gap-2 border-t border-white/10 pt-6 text-sm text-zinc-500 md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} {siteConfig.name}. Todos los derechos reservados.</p>
+          <p>
+            © {new Date().getFullYear()} {siteConfig.name}. Todos los derechos
+            reservados.
+          </p>
           <p>Diseñado para música, comunidad y experiencia editorial.</p>
         </div>
       </div>
