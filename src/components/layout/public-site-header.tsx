@@ -33,6 +33,36 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function getNavLinkClass(label: string, active: boolean) {
+  if (label === "Inicio") {
+    return active
+      ? "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300 shadow-[0_0_18px_rgba(217,70,239,0.16)]"
+      : "border border-white/10 bg-black/40 text-white hover:border-fuchsia-500/30 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 hover:shadow-[0_0_16px_rgba(217,70,239,0.28)]";
+  }
+
+  if (label === "Blog") {
+    return active
+      ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.16)]"
+      : "border border-white/10 bg-black/40 text-white hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300 hover:shadow-[0_0_16px_rgba(34,211,238,0.28)]";
+  }
+
+  if (label === "Pedí tu tema") {
+    return active
+      ? "border border-violet-500/30 bg-violet-500/10 text-violet-300 shadow-[0_0_18px_rgba(139,92,246,0.16)]"
+      : "border border-white/10 bg-black/40 text-white hover:border-violet-500/30 hover:bg-violet-500/10 hover:text-violet-300 hover:shadow-[0_0_16px_rgba(139,92,246,0.28)]";
+  }
+
+  if (label === "Contacto") {
+    return active
+      ? "border border-orange-500/30 bg-orange-500/10 text-orange-300 shadow-[0_0_18px_rgba(249,115,22,0.16)]"
+      : "border border-white/10 bg-black/40 text-white hover:border-orange-500/30 hover:bg-orange-500/10 hover:text-orange-300 hover:shadow-[0_0_16px_rgba(249,115,22,0.28)]";
+  }
+
+  return active
+    ? "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300 shadow-[0_0_18px_rgba(217,70,239,0.16)]"
+    : "border border-white/10 bg-black/40 text-white hover:bg-white/[0.04]";
+}
+
 export function PublicSiteHeader() {
   const pathname = usePathname();
 
@@ -66,11 +96,10 @@ export function PublicSiteHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${
+                  className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getNavLinkClass(
+                    item.label,
                     active
-                      ? "border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300 shadow-[0_0_18px_rgba(217,70,239,0.16)]"
-                      : "border border-white/10 bg-black/40 text-white hover:bg-white/[0.04]"
-                  }`}
+                  )}`}
                 >
                   {item.label}
                 </Link>
