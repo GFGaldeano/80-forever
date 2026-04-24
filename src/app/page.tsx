@@ -13,9 +13,7 @@ import { getPublicStreamConfig } from "@/lib/stream/get-public-stream-config";
 
 export const dynamic = "force-dynamic";
 
-function getHeroCopy(
-  status: "live" | "offline" | "upcoming" | "replay"
-) {
+function getHeroCopy(status: "live" | "offline" | "upcoming" | "replay") {
   switch (status) {
     case "live":
       return "La señal está activa y lista para acompañarte con clásicos inolvidables.";
@@ -45,6 +43,7 @@ export default async function HomePage() {
               width={1200}
               height={514}
               priority
+              unoptimized
               className="h-auto w-full max-w-[520px] select-none md:max-w-[620px]"
             />
           </div>
