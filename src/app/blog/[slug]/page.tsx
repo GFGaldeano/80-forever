@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Badge } from "@/components/ui/badge";
+import { PublicShell } from "@/components/layout/public-shell";
 import { getBlogCategoryBadgeClass } from "@/lib/blog/blog-category-theme";
 import { getPublicBlogPostBySlug } from "@/lib/blog/get-public-blog-post-by-slug";
 import { siteConfig } from "@/lib/config/site";
 import { absoluteUrl, buildMetaDescription } from "@/lib/seo";
-import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -96,13 +97,8 @@ export default async function BlogPostDetailPage({
   const paragraphs = buildParagraphs(post.content);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#000000] text-white">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full bg-fuchsia-500/5 blur-3xl" />
-        <div className="absolute bottom-20 left-1/4 h-64 w-64 rounded-full bg-cyan-500/5 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-4xl px-6 py-12 md:px-8">
+    <PublicShell>
+      <div className="mx-auto max-w-4xl px-6 py-12 md:px-8">
         <Link
           href="/blog"
           className="inline-flex rounded-xl border border-fuchsia-400/40 bg-fuchsia-500/10 px-4 py-2 text-sm font-medium text-fuchsia-300 shadow-[0_0_18px_rgba(217,70,239,0.18)] backdrop-blur-sm transition hover:border-fuchsia-300/70 hover:bg-fuchsia-500/15 hover:text-fuchsia-200 hover:shadow-[0_0_24px_rgba(217,70,239,0.28)]"
@@ -165,6 +161,6 @@ export default async function BlogPostDetailPage({
           ))}
         </article>
       </div>
-    </main>
+    </PublicShell>
   );
 }

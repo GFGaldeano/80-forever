@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Badge } from "@/components/ui/badge";
 import { BlogPagination } from "@/components/blog/blog-pagination";
-import { getBlogCategoryBadgeClass, getBlogCategoryFilterClass } from "@/lib/blog/blog-category-theme";
+import { PublicShell } from "@/components/layout/public-shell";
+import {
+  getBlogCategoryBadgeClass,
+  getBlogCategoryFilterClass,
+} from "@/lib/blog/blog-category-theme";
 import { getBlogCategories } from "@/lib/blog/get-blog-categories";
 import { getPublicBlogPosts } from "@/lib/blog/get-public-blog-posts";
 import { siteConfig } from "@/lib/config/site";
 import { absoluteUrl } from "@/lib/seo";
-import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +75,9 @@ export async function generateMetadata({
     params.set("page", String(currentPage));
   }
 
-  const canonical = absoluteUrl(`/blog${params.toString() ? `?${params.toString()}` : ""}`);
+  const canonical = absoluteUrl(
+    `/blog${params.toString() ? `?${params.toString()}` : ""}`
+  );
 
   return {
     title,
@@ -129,24 +135,10 @@ export default async function BlogPage({
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#000000] text-white">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-16 h-72 w-72 -translate-x-1/2 rounded-full bg-fuchsia-500/5 blur-3xl" />
-        <div className="absolute bottom-20 left-1/4 h-64 w-64 rounded-full bg-cyan-500/5 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto max-w-6xl px-6 py-12 md:px-8">
+    <PublicShell>
+      <div className="mx-auto max-w-6xl px-6 py-12 md:px-8">
         <header className="border-b border-white/10 pb-8 text-center">
-          <div className="flex justify-center">
-            <Link
-              href="/"
-              className="inline-flex rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/10 px-4 py-2 text-sm text-fuchsia-300 transition hover:bg-fuchsia-500/15"
-            >
-              Volver al inicio
-            </Link>
-          </div>
-
-          <p className="mt-6 text-xs uppercase tracking-[0.3em] text-zinc-500 [font-family:var(--font-orbitron)]">
+          <p className="text-xs uppercase tracking-[0.3em] text-zinc-500 [font-family:var(--font-orbitron)]">
             {siteConfig.name}
           </p>
 
@@ -162,9 +154,11 @@ export default async function BlogPage({
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               href="/blog"
-              className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass({
-                active: !selectedCategory,
-              })}`}
+              className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass(
+                {
+                  active: !selectedCategory,
+                }
+              )}`}
             >
               Todas
             </Link>
@@ -173,10 +167,12 @@ export default async function BlogPage({
               <Link
                 key={category.id}
                 href={`/blog?category=${category.slug}`}
-                className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass({
-                  slug: category.slug,
-                  active: selectedCategory?.slug === category.slug,
-                })}`}
+                className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass(
+                  {
+                    slug: category.slug,
+                    active: selectedCategory?.slug === category.slug,
+                  }
+                )}`}
               >
                 {category.name}
               </Link>
@@ -250,6 +246,6 @@ export default async function BlogPage({
           />
         ) : null}
       </div>
-    </main>
+    </PublicShell>
   );
 }
