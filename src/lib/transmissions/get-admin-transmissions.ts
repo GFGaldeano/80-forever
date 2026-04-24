@@ -11,6 +11,10 @@ export type AdminTransmission = {
   youtube_watch_url: string;
   youtube_embed_url: string;
   youtube_thumbnail_url: string;
+  youtube_title: string | null;
+  youtube_author_name: string | null;
+  youtube_author_url: string | null;
+  youtube_last_synced_at: string | null;
   status: "draft" | "scheduled" | "aired" | "archived";
   is_visible: boolean;
   scheduled_at: string | null;
@@ -32,6 +36,10 @@ const TRANSMISSIONS_SELECT = `
   youtube_watch_url,
   youtube_embed_url,
   youtube_thumbnail_url,
+  youtube_title,
+  youtube_author_name,
+  youtube_author_url,
+  youtube_last_synced_at,
   status,
   is_visible,
   scheduled_at,
