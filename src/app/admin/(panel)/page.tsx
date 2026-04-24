@@ -2,22 +2,24 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
-  BarChart3,
   FileText,
   Globe,
   Image as ImageIcon,
   Megaphone,
   MessagesSquare,
-  MousePointerClick,
   Music2,
   Radio,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardMetricCard } from "@/components/admin/dashboard-metric-card";
+import { SiteAnalyticsCTAChart } from "@/components/admin/site-analytics-cta-chart";
+import { SiteAnalyticsTopPagesChart } from "@/components/admin/site-analytics-top-pages-chart";
+import { SiteAnalyticsTrafficChart } from "@/components/admin/site-analytics-traffic-chart";
 import { StreamStatusBadge } from "@/components/streaming/stream-status-badge";
 import { getAdminDashboardSummary } from "@/lib/admin/get-dashboard-summary";
 import { getSiteAnalyticsSummary } from "@/lib/admin/get-site-analytics-summary";
+import { getSiteAnalyticsTrafficSeries } from "@/lib/admin/get-site-analytics-traffic-series";
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("es-AR", {
@@ -66,12 +68,34 @@ const quickLinks = [
 ];
 
 export default async function AdminDashboardPage() {
-  const [summary, analytics] = await Promise.all([
+  const [summary, analytics, trafficSeries] = await Promise.all([
     getAdminDashboardSummary(),
     getSiteAnalyticsSummary(),
+    getSiteAnalyticsTrafficSeries(),
   ]);
 
-  const topPageMaxViews = analytics.topPagesLast30Days[0]?.views ?? 1;
+  const ctaChartData = [
+    {
+      label: "Blog",
+      clicks: analytics.ctaClicksLast30Days.blog,
+      color: "#22d3ee",
+    },
+    {
+      label: "Contacto",
+      clicks: analytics.ctaClicksLast30Days.contact,
+      color: "#fb923c",
+    },
+    {
+      label: "Pedí tu tema",
+      clicks: analytics.ctaClicksLast30Days.songRequests,
+      color: "#a78bfa",
+    },
+    {
+      label: "Comunidad",
+      clicks: analytics.ctaClicksLast30Days.whatsapp,
+      color: "#4ade80",
+    },
+  ];
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
@@ -148,178 +172,87 @@ export default async function AdminDashboardPage() {
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="border-white/10 bg-zinc-950/80 text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <Globe className="h-5 w-5 text-cyan-300" />
-              Audiencia del sitio
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                  Hoy
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">
-                  {analytics.pageViews.today}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                  7 días
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">
-                  {analytics.pageViews.last7Days}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                  30 días
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">
-                  {analytics.pageViews.last30Days}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                  365 días
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">
-                  {analytics.pageViews.last365Days}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-[1fr_0.95fr]">
-              <div>
-                <p className="mb-4 text-sm font-medium text-white">
-                  Top páginas últimos 30 días
-                </p>
-
-                <div className="space-y-3">
-                  {analytics.topPagesLast30Days.length ? (
-                    analytics.topPagesLast30Days.map((page) => (
-                      <div
-                        key={page.path}
-                        className="rounded-2xl border border-white/10 bg-black/40 p-4"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="truncate text-sm text-white">
-                            {page.path}
-                          </p>
-                          <p className="text-sm text-zinc-400">
-                            {page.views}
-                          </p>
-                        </div>
-
-                        <div className="mt-3 h-2 rounded-full bg-white/5">
-                          <div
-                            className="h-2 rounded-full bg-cyan-400/70"
-                            style={{
-                              width: `${Math.max(
-                                8,
-                                (page.views / topPageMaxViews) * 100
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-zinc-400">
-                      Todavía no hay datos suficientes de navegación.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-4 flex items-center gap-2 text-sm font-medium text-white">
-                  <MousePointerClick className="h-4 w-4 text-fuchsia-300" />
-                  Interacciones CTA últimos 30 días
-                </p>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
-                      Blog
-                    </p>
-                    <p className="mt-3 text-2xl font-semibold text-cyan-300">
-                      {analytics.ctaClicksLast30Days.blog}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
-                      Contacto
-                    </p>
-                    <p className="mt-3 text-2xl font-semibold text-orange-300">
-                      {analytics.ctaClicksLast30Days.contact}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
-                      Pedí tu tema
-                    </p>
-                    <p className="mt-3 text-2xl font-semibold text-violet-300">
-                      {analytics.ctaClicksLast30Days.songRequests}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
-                      Comunidad
-                    </p>
-                    <p className="mt-3 text-2xl font-semibold text-green-300">
-                      {analytics.ctaClicksLast30Days.whatsapp}
-                    </p>
-                  </div>
-                </div>
-
-                <p className="mt-4 text-sm leading-6 text-zinc-400">
-                  Esta base ya nos permite medir audiencia web y comportamiento
-                  inicial. El próximo paso natural es agregar series temporales y
-                  gráficos interactivos.
-                </p>
-              </div>
-            </div>
+          <CardContent className="p-5">
+            <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+              Audiencia hoy
+            </p>
+            <p className="mt-3 text-3xl font-semibold text-white">
+              {analytics.pageViews.today}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-white/10 bg-zinc-950/80 text-white">
+          <CardContent className="p-5">
+            <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+              Últimos 7 días
+            </p>
+            <p className="mt-3 text-3xl font-semibold text-white">
+              {analytics.pageViews.last7Days}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-white/10 bg-zinc-950/80 text-white">
+          <CardContent className="p-5">
+            <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+              Últimos 30 días
+            </p>
+            <p className="mt-3 text-3xl font-semibold text-white">
+              {analytics.pageViews.last30Days}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-white/10 bg-zinc-950/80 text-white">
+          <CardContent className="p-5">
+            <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+              Últimos 365 días
+            </p>
+            <p className="mt-3 text-3xl font-semibold text-white">
+              {analytics.pageViews.last365Days}
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+     <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr] xl:[&>*]:min-w-0">
+        <SiteAnalyticsTrafficChart series={trafficSeries} />
+        <SiteAnalyticsCTAChart data={ctaChartData} />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr] xl:[&>*]:min-w-0">
+        <SiteAnalyticsTopPagesChart data={analytics.topPagesLast30Days} />
+
+        <Card className="border-white/10 bg-zinc-950/80 text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
-              <BarChart3 className="h-5 w-5 text-cyan-300" />
+              <Globe className="h-5 w-5 text-cyan-300" />
               Próxima capa
             </CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-4">
             <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-200">
-              Con la fundación analytics lista, la siguiente rama puede sumar
-              agregaciones por día, gráficos de tendencia, eventos durante
-              transmisión y, más adelante, integración con YouTube.
+              Ya tenemos fundación y charts de audiencia. El siguiente paso es
+              sumar series por transmisión, eventos del player y, cuando
+              convenga, integrar YouTube.
             </div>
 
             <div className="space-y-3">
               <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
-                • Serie diaria de visitas
+                • Picos durante transmisión
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
-                • Picos durante transmisión
+                • Comparativa antes / durante / después del vivo
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
                 • CTR de sponsors y comunidad
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
-                • Charts interactivos y lectura ejecutiva
+                • Integración con YouTube y lectura comercial
               </div>
             </div>
           </CardContent>
@@ -480,18 +413,18 @@ export default async function AdminDashboardPage() {
 
         <Card className="border-white/10 bg-zinc-950/80 text-white">
           <CardHeader>
-            <CardTitle>Resumen operativo</CardTitle>
+            <CardTitle>Lectura ejecutiva</CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-3 text-sm text-zinc-400">
             <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-              El dashboard ya combina operación editorial y primeros datos de audiencia.
+              El dashboard ya combina operación editorial con audiencia real del sitio.
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-              Esto nos da una base concreta para medir crecimiento del proyecto y valor comercial para sponsors.
+              Esto da base objetiva para decisiones de contenido, programación y valor comercial para sponsors.
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-              El siguiente paso es sumar agregaciones históricas y visualización en charts interactivos.
+              La próxima iteración debería enfocarse en transmisión y correlación entre tráfico y consumo del vivo.
             </div>
           </CardContent>
         </Card>
