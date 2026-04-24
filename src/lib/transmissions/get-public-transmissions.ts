@@ -12,6 +12,7 @@ export type PublicTransmission = {
   status: "draft" | "scheduled" | "aired" | "archived";
   aired_at: string | null;
   scheduled_at: string | null;
+  created_at: string;
 };
 
 const PUBLIC_TRANSMISSIONS_SELECT = `
@@ -25,7 +26,8 @@ const PUBLIC_TRANSMISSIONS_SELECT = `
   youtube_thumbnail_url,
   status,
   aired_at,
-  scheduled_at
+  scheduled_at,
+  created_at
 `;
 
 export async function getPublicTransmissions(): Promise<PublicTransmission[]> {

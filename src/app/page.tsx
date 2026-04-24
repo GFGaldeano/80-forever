@@ -13,7 +13,9 @@ import { getPublicStreamConfig } from "@/lib/stream/get-public-stream-config";
 
 export const dynamic = "force-dynamic";
 
-function getHeroCopy(status: "live" | "offline" | "upcoming" | "replay") {
+function getHeroCopy(
+  status: "live" | "offline" | "upcoming" | "replay"
+) {
   switch (status) {
     case "live":
       return "La señal está activa y lista para acompañarte con clásicos inolvidables.";
@@ -75,6 +77,15 @@ export default async function HomePage() {
             </TrackedLink>
 
             <TrackedLink
+              href="/transmisiones"
+              eventAction="home_transmissions"
+              eventLabel="Transmisiones pasadas"
+              className="inline-flex rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-300 transition hover:bg-rose-500/15"
+            >
+              Transmisiones pasadas
+            </TrackedLink>
+
+            <TrackedLink
               href="/contacto"
               eventAction="home_contact"
               eventLabel="Contacto"
@@ -112,7 +123,7 @@ export default async function HomePage() {
           </div>
         ) : null}
 
-        <section className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <section className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-3xl border border-white/10 bg-zinc-950/70 p-6">
             <p className="text-xs uppercase tracking-[0.24em] text-zinc-500 [font-family:var(--font-orbitron)]">
               Concepto
@@ -137,6 +148,30 @@ export default async function HomePage() {
               Nostalgia, energía y una curaduría musical pensada como
               experiencia audiovisual.
             </p>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-zinc-950/70 p-6">
+            <p className="text-xs uppercase tracking-[0.24em] text-zinc-500 [font-family:var(--font-orbitron)]">
+              Historial
+            </p>
+            <h2 className="mt-3 text-xl font-semibold text-white">
+              Transmisiones pasadas
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              Explorá emisiones anteriores, reviví programas ya emitidos y accedé
+              al archivo audiovisual de 80&apos;s Forever.
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <TrackedLink
+                href="/transmisiones"
+                eventAction="home_transmissions"
+                eventLabel="Ver historial"
+                className="inline-flex rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-300 transition hover:bg-rose-500/15"
+              >
+                Ver historial
+              </TrackedLink>
+            </div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-zinc-950/70 p-6">
