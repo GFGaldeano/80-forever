@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import { siteConfig } from "@/lib/config/site";
 
 export function PublicSiteFooter() {
@@ -30,43 +30,53 @@ export function PublicSiteFooter() {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link
+              <TrackedLink
                 href="/"
+                eventAction="nav_home"
+                eventLabel="Inicio footer"
                 className="inline-flex items-center rounded-xl border border-fuchsia-500/30 bg-fuchsia-500/10 px-4 py-2 text-sm font-medium text-fuchsia-300 transition hover:bg-fuchsia-500/20 hover:text-fuchsia-200 hover:shadow-[0_0_16px_rgba(217,70,239,0.35)]"
               >
                 Inicio
-              </Link>
+              </TrackedLink>
 
-              <Link
+              <TrackedLink
                 href="/blog"
+                eventAction="nav_blog"
+                eventLabel="Blog footer"
                 className="inline-flex items-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20 hover:text-cyan-200 hover:shadow-[0_0_16px_rgba(34,211,238,0.35)]"
               >
                 Blog
-              </Link>
+              </TrackedLink>
 
-              <Link
+              <TrackedLink
                 href="/pedi-tu-tema"
+                eventAction="nav_song_requests"
+                eventLabel="Pedí tu tema footer"
                 className="inline-flex items-center rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-300 transition hover:bg-violet-500/20 hover:text-violet-200 hover:shadow-[0_0_16px_rgba(139,92,246,0.35)]"
               >
                 Pedí tu tema
-              </Link>
+              </TrackedLink>
 
-              <Link
+              <TrackedLink
                 href="/contacto"
+                eventAction="nav_contact"
+                eventLabel="Contacto footer"
                 className="inline-flex items-center rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-2 text-sm font-medium text-orange-300 transition hover:bg-orange-500/20 hover:text-orange-200 hover:shadow-[0_0_16px_rgba(249,115,22,0.35)]"
               >
                 Contacto
-              </Link>
+              </TrackedLink>
 
-              <a
+              <TrackedLink
                 href={siteConfig.whatsappCommunityUrl}
                 target="_blank"
                 rel="noreferrer"
+                eventAction="whatsapp_community"
+                eventLabel="Comunidad footer"
                 className="inline-flex items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm font-medium text-green-300 transition hover:bg-green-500/20 hover:text-green-200 hover:shadow-[0_0_16px_rgba(34,197,94,0.35)]"
               >
                 <MessageCircle className="h-4 w-4" />
                 Comunidad
-              </a>
+              </TrackedLink>
             </div>
           </div>
         </div>

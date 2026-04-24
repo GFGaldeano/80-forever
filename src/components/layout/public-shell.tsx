@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { PublicSiteFooter } from "@/components/layout/public-site-footer";
 import { PublicSiteHeader } from "@/components/layout/public-site-header";
 
@@ -17,6 +18,7 @@ export function PublicShell({ children }: Readonly<PublicShellProps>) {
       </div>
 
       <div className="relative flex min-h-screen flex-col">
+        <PageViewTracker />
         <PublicSiteHeader />
         <main className="flex-1">{children}</main>
         <PublicSiteFooter />

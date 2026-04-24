@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import { PublicShell } from "@/components/layout/public-shell";
 import { PublicSponsorCarousel } from "@/components/sponsors/public-sponsor-carousel";
 import { PublicStreamPlayer } from "@/components/streaming/public-stream-player";
@@ -65,19 +65,23 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link
+            <TrackedLink
               href="/blog"
+              eventAction="home_blog"
+              eventLabel="Ir al blog"
               className="inline-flex rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/10 px-4 py-2 text-sm text-fuchsia-300 transition hover:bg-fuchsia-500/15"
             >
               Ir al blog
-            </Link>
+            </TrackedLink>
 
-            <Link
+            <TrackedLink
               href="/contacto"
+              eventAction="home_contact"
+              eventLabel="Contacto"
               className="inline-flex rounded-xl border border-orange-400/40 bg-orange-500/10 px-4 py-2 text-sm text-orange-300 shadow-[0_0_18px_rgba(249,115,22,0.18)] transition hover:border-orange-300/70 hover:bg-orange-500/15 hover:text-orange-200 hover:shadow-[0_0_24px_rgba(249,115,22,0.28)]"
             >
               Contacto
-            </Link>
+            </TrackedLink>
           </div>
         </header>
 
@@ -143,12 +147,14 @@ export default async function HomePage() {
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link
+              <TrackedLink
                 href="/pedi-tu-tema"
+                eventAction="home_song_requests"
+                eventLabel="Ir al formulario"
                 className="inline-flex rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/15"
               >
                 Ir al formulario
-              </Link>
+              </TrackedLink>
             </div>
           </div>
 
@@ -170,14 +176,16 @@ export default async function HomePage() {
               canal y actualizaciones especiales de 80&apos;s Forever.
             </p>
 
-            <a
+            <TrackedLink
               href={siteConfig.whatsappCommunityUrl}
               target="_blank"
               rel="noreferrer"
+              eventAction="whatsapp_community"
+              eventLabel="Unirme por WhatsApp"
               className="mt-5 inline-flex rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-300 transition hover:bg-green-500/15"
             >
               Unirme por WhatsApp
-            </a>
+            </TrackedLink>
           </div>
         </section>
       </div>
