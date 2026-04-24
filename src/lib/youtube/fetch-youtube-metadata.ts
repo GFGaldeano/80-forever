@@ -10,12 +10,14 @@ export type SyncedYouTubeMetadata = {
   authorUrl: string | null;
   source: "youtube_oembed" | "parsed_url";
   syncedAt: string;
+  syncError: string | null;
 };
 
 type YouTubeOEmbedResponse = {
   title?: string;
   author_name?: string;
   author_url?: string;
+  thumbnail_url?: string;
 };
 
 export async function fetchYouTubeMetadata(
@@ -37,6 +39,7 @@ export async function fetchYouTubeMetadata(
     authorUrl: null,
     source: "parsed_url",
     syncedAt: new Date().toISOString(),
+    syncError: null,
   };
 
   try {
@@ -53,7 +56,10 @@ export async function fetchYouTubeMetadata(
     });
 
     if (!response.ok) {
-      return fallback;
+      return {
+        ...fallback,
+        syncError: `YouTube oEmbed respondió ${response.status}.`,
+      };
     }
 
     const json = (await response.json()) as YouTubeOEmbedResponse;
@@ -63,9 +69,19 @@ export async function fetchYouTubeMetadata(
       title: json.title?.trim() || null,
       authorName: json.author_name?.trim() || null,
       authorUrl: json.author_url?.trim() || null,
+      thumbnailUrl: json.thumbnail_url?.trim() || fallback.thumbnailUrl,
       source: "youtube_oembed",
+      syncError: null,
     };
-  } catch {
-    return fallback;
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No se pudo obtener metadata enriquecida de YouTube.";
+
+    return {
+      ...fallback,
+      syncError: message,
+    };
   }
 }
