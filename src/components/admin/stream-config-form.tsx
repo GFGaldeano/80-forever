@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Radio, Save } from "lucide-react";
 
@@ -73,8 +73,6 @@ export function StreamConfigForm({
   const [form, setForm] = useState<FormState>(getInitialFormState(initialConfig));
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-  const currentStatusMeta = useMemo(() => streamStatusMeta[form.status], [form.status]);
 
   const setField =
     <K extends keyof FormState>(field: K) =>

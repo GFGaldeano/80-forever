@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -49,8 +50,7 @@ export async function generateMetadata({
     };
   }
 
-  const description =
-    post.excerpt || buildMetaDescription(post.content, 160);
+  const description = post.excerpt || buildMetaDescription(post.content, 160);
 
   const title = `${post.title} | Blog | ${siteConfig.name}`;
   const canonical = absoluteUrl(`/blog/${post.slug}`);
@@ -143,11 +143,13 @@ export default async function BlogPostDetailPage({
 
         {post.cover_image_url ? (
           <div className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-black">
-            <div className="aspect-[21/9]">
-              <img
+            <div className="relative aspect-[21/9]">
+              <Image
                 src={post.cover_image_url}
                 alt={post.title}
-                className="h-full w-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 896px"
+                className="object-cover"
               />
             </div>
           </div>
