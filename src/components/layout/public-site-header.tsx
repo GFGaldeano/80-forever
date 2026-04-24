@@ -19,6 +19,11 @@ const navItems = [
     action: "nav_blog",
   },
   {
+    label: "Transmisiones",
+    href: "/transmisiones",
+    action: "nav_transmissions",
+  },
+  {
     label: "Pedí tu tema",
     href: "/pedi-tu-tema",
     action: "nav_song_requests",
@@ -49,6 +54,12 @@ function getNavLinkClass(label: string, active: boolean) {
     return active
       ? "border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.16)]"
       : "border border-white/10 bg-black/40 text-white hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300 hover:shadow-[0_0_16px_rgba(34,211,238,0.28)]";
+  }
+
+  if (label === "Transmisiones") {
+    return active
+      ? "border border-rose-500/30 bg-rose-500/10 text-rose-300 shadow-[0_0_18px_rgba(244,63,94,0.16)]"
+      : "border border-white/10 bg-black/40 text-white hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-300 hover:shadow-[0_0_16px_rgba(244,63,94,0.28)]";
   }
 
   if (label === "Pedí tu tema") {

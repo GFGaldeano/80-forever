@@ -49,6 +49,15 @@ export function PublicSiteFooter() {
               </TrackedLink>
 
               <TrackedLink
+                href="/transmisiones"
+                eventAction="nav_transmissions"
+                eventLabel="Transmisiones footer"
+                className="inline-flex items-center rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-300 transition hover:bg-rose-500/20 hover:text-rose-200 hover:shadow-[0_0_16px_rgba(244,63,94,0.35)]"
+              >
+                Transmisiones
+              </TrackedLink>
+
+              <TrackedLink
                 href="/pedi-tu-tema"
                 eventAction="nav_song_requests"
                 eventLabel="Pedí tu tema footer"
