@@ -4,8 +4,15 @@ import { notFound } from "next/navigation";
 import { PublicShell } from "@/components/layout/public-shell";
 import { TrackedLink } from "@/components/analytics/tracked-link";
 import { getPublicTransmissionBySlug } from "@/lib/transmissions/get-public-transmission-by-slug";
-import { siteConfig } from "@/lib/config/site";
-import { absoluteUrl, buildMetaDescription } from "@/lib/seo";
+import {
+  buildAbsoluteSiteUrl,
+  getPublicSiteSeo,
+} from "@/lib/seo/get-public-site-seo";
+import {
+  buildBreadcrumbJsonLd,
+  buildVideoObjectJsonLd,
+  toJsonLd,
+} from "@/lib/seo/json-ld";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +42,13 @@ function getTransmissionDateLabel(
 export async function generateMetadata({
   params,
 }: Readonly<TransmissionDetailPageProps>): Promise<Metadata> {
+  const seo = await getPublicSiteSeo();
   const { slug } = await params;
   const transmission = await getPublicTransmissionBySlug(slug);
 
   if (!transmission) {
     return {
-      title: `Transmisión no encontrada | ${siteConfig.name}`,
+      title: `Transmisión no encontrada | ${seo.siteName}`,
       robots: {
         index: false,
         follow: false,
@@ -50,14 +58,14 @@ export async function generateMetadata({
 
   const description =
     transmission.description ||
-    buildMetaDescription(
-      `Reviví ${transmission.title} en el historial de transmisiones de ${siteConfig.name}.`,
-      160
-    );
+    `Reviví ${transmission.title} en el historial de transmisiones de ${seo.siteName}.`;
 
-  const title = `${transmission.title} | Transmisiones | ${siteConfig.name}`;
-  const canonical = absoluteUrl(`/transmisiones/${transmission.slug}`);
-  const imageUrl = transmission.youtube_thumbnail_url || siteConfig.logoBannerUrl;
+  const title = `${transmission.title} | Transmisiones | ${seo.siteName}`;
+  const canonical = buildAbsoluteSiteUrl(
+    seo.siteUrl,
+    `/transmisiones/${transmission.slug}`
+  );
+  const imageUrl = transmission.youtube_thumbnail_url || seo.socialImageUrl;
 
   return {
     title,
@@ -89,6 +97,7 @@ export async function generateMetadata({
 export default async function TransmissionDetailPage({
   params,
 }: Readonly<TransmissionDetailPageProps>) {
+  const seo = await getPublicSiteSeo();
   const { slug } = await params;
   const transmission = await getPublicTransmissionBySlug(slug);
 
@@ -102,8 +111,49 @@ export default async function TransmissionDetailPage({
     transmission.created_at
   );
 
+  const pageUrl = buildAbsoluteSiteUrl(
+    seo.siteUrl,
+    `/transmisiones/${transmission.slug}`
+  );
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    {
+      name: "Inicio",
+      url: buildAbsoluteSiteUrl(seo.siteUrl, "/"),
+    },
+    {
+      name: "Transmisiones",
+      url: buildAbsoluteSiteUrl(seo.siteUrl, "/transmisiones"),
+    },
+    {
+      name: transmission.title,
+      url: pageUrl,
+    },
+  ]);
+
+  const videoJsonLd = buildVideoObjectJsonLd({
+    name: transmission.title,
+    description: transmission.description || undefined,
+    thumbnailUrl: transmission.youtube_thumbnail_url || undefined,
+    embedUrl: transmission.youtube_embed_url || undefined,
+    contentUrl: transmission.youtube_watch_url || undefined,
+    uploadDate:
+      transmission.aired_at || transmission.scheduled_at || transmission.created_at,
+    publisherName: seo.siteName,
+    publisherLogo: seo.logoUrl,
+  });
+
   return (
     <PublicShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(videoJsonLd) }}
+      />
+
       <div className="mx-auto max-w-5xl px-6 py-12 md:px-8">
         <TrackedLink
           href="/transmisiones"
