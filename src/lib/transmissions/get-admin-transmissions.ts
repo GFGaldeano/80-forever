@@ -15,6 +15,8 @@ export type AdminTransmission = {
   youtube_author_name: string | null;
   youtube_author_url: string | null;
   youtube_last_synced_at: string | null;
+  youtube_sync_source: string | null;
+  youtube_sync_error: string | null;
   status: "draft" | "scheduled" | "aired" | "archived";
   is_visible: boolean;
   scheduled_at: string | null;
@@ -40,6 +42,8 @@ const TRANSMISSIONS_SELECT = `
   youtube_author_name,
   youtube_author_url,
   youtube_last_synced_at,
+  youtube_sync_source,
+  youtube_sync_error,
   status,
   is_visible,
   scheduled_at,
