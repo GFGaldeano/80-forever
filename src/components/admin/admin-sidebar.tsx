@@ -80,7 +80,7 @@ const navItems = [
     title: "Configuración",
     href: "/admin/settings",
     icon: Settings,
-    enabled: false,
+    enabled: true,
   },
 ];
 
@@ -112,23 +112,6 @@ function SidebarNavContent({ admin }: AdminSidebarProps) {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
-
-          if (!item.enabled) {
-            return (
-              <div
-                key={item.title}
-                className="flex items-center justify-between rounded-xl border border-transparent px-3 py-3 text-sm text-zinc-500"
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                </div>
-                <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-600">
-                  Soon
-                </span>
-              </div>
-            );
-          }
 
           return (
             <Link
