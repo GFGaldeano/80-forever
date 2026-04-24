@@ -23,26 +23,32 @@ export function PublicSponsorCarousel({
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  const safeAssets = useMemo(() => assets.filter((asset) => asset.asset_url), [assets]);
-  const currentAsset = safeAssets[activeIndex];
+  const safeAssets = useMemo(
+    () => assets.filter((asset) => asset.asset_url),
+    [assets]
+  );
+
+  const normalizedActiveIndex =
+    safeAssets.length === 0 ? 0 : activeIndex % safeAssets.length;
+
+  const currentAsset = safeAssets[normalizedActiveIndex];
 
   useEffect(() => {
-    if (safeAssets.length <= 1 || isPaused) return;
+    if (safeAssets.length <= 1 || isPaused || !currentAsset) return;
 
     const timeout = window.setTimeout(() => {
       setActiveIndex((prev) => (prev + 1) % safeAssets.length);
-    }, getDurationMs(currentAsset?.duration_seconds));
+    }, getDurationMs(currentAsset.duration_seconds));
 
     return () => window.clearTimeout(timeout);
-  }, [activeIndex, currentAsset?.duration_seconds, isPaused, safeAssets.length]);
+  }, [
+    currentAsset,
+    currentAsset?.duration_seconds,
+    isPaused,
+    safeAssets.length,
+  ]);
 
-  useEffect(() => {
-    if (activeIndex > safeAssets.length - 1) {
-      setActiveIndex(0);
-    }
-  }, [activeIndex, safeAssets.length]);
-
-  if (!safeAssets.length) return null;
+  if (!safeAssets.length || !currentAsset) return null;
 
   return (
     <section
@@ -58,7 +64,7 @@ export function PublicSponsorCarousel({
         {safeAssets.length > 1 ? (
           <div className="flex items-center gap-2">
             {safeAssets.map((asset, index) => {
-              const isActive = index === activeIndex;
+              const isActive = index === normalizedActiveIndex;
 
               return (
                 <button
