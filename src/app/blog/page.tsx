@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { BlogPagination } from "@/components/blog/blog-pagination";
 import { PublicShell } from "@/components/layout/public-shell";
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import {
   getBlogCategoryBadgeClass,
   getBlogCategoryFilterClass,
@@ -152,8 +152,10 @@ export default async function BlogPage({
           </p>
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
+            <TrackedLink
               href="/blog"
+              eventAction="blog_filter_all"
+              eventLabel="Todas"
               className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass(
                 {
                   active: !selectedCategory,
@@ -161,12 +163,14 @@ export default async function BlogPage({
               )}`}
             >
               Todas
-            </Link>
+            </TrackedLink>
 
             {categories.map((category) => (
-              <Link
+              <TrackedLink
                 key={category.id}
                 href={`/blog?category=${category.slug}`}
+                eventAction={`blog_filter_${category.slug}`}
+                eventLabel={category.name}
                 className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass(
                   {
                     slug: category.slug,
@@ -175,7 +179,7 @@ export default async function BlogPage({
                 )}`}
               >
                 {category.name}
-              </Link>
+              </TrackedLink>
             ))}
           </div>
         </header>
@@ -218,12 +222,18 @@ export default async function BlogPage({
                     {post.excerpt || "Sin extracto disponible."}
                   </p>
 
-                  <Link
+                  <TrackedLink
                     href={`/blog/${post.slug}`}
+                    eventAction="blog_post_read"
+                    eventLabel={post.title}
+                    eventMetadata={{
+                      slug: post.slug,
+                      category: post.category?.slug ?? null,
+                    }}
                     className="mt-5 inline-flex rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/15"
                   >
                     Leer post
-                  </Link>
+                  </TrackedLink>
                 </div>
               </article>
             ))

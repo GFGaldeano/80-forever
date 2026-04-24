@@ -4,9 +4,11 @@ import {
   ArrowRight,
   BarChart3,
   FileText,
+  Globe,
   Image as ImageIcon,
   Megaphone,
   MessagesSquare,
+  MousePointerClick,
   Music2,
   Radio,
 } from "lucide-react";
@@ -15,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardMetricCard } from "@/components/admin/dashboard-metric-card";
 import { StreamStatusBadge } from "@/components/streaming/stream-status-badge";
 import { getAdminDashboardSummary } from "@/lib/admin/get-dashboard-summary";
+import { getSiteAnalyticsSummary } from "@/lib/admin/get-site-analytics-summary";
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("es-AR", {
@@ -63,7 +66,12 @@ const quickLinks = [
 ];
 
 export default async function AdminDashboardPage() {
-  const summary = await getAdminDashboardSummary();
+  const [summary, analytics] = await Promise.all([
+    getAdminDashboardSummary(),
+    getSiteAnalyticsSummary(),
+  ]);
+
+  const topPageMaxViews = analytics.topPagesLast30Days[0]?.views ?? 1;
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
@@ -79,7 +87,8 @@ export default async function AdminDashboardPage() {
           </h2>
 
           <p className="mt-3 max-w-3xl text-sm text-zinc-400">
-            Vista ejecutiva del estado del proyecto, operación editorial y módulos activos del sistema.
+            Vista ejecutiva del estado del proyecto, operación editorial,
+            audiencia web y módulos activos del sistema.
           </p>
         </div>
 
@@ -137,6 +146,184 @@ export default async function AdminDashboardPage() {
           icon={FileText}
           accentClassName="border-emerald-500/20 bg-emerald-500/10 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.12)]"
         />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card className="border-white/10 bg-zinc-950/80 text-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <Globe className="h-5 w-5 text-cyan-300" />
+              Audiencia del sitio
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+                  Hoy
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {analytics.pageViews.today}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+                  7 días
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {analytics.pageViews.last7Days}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+                  30 días
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {analytics.pageViews.last30Days}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
+                  365 días
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {analytics.pageViews.last365Days}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[1fr_0.95fr]">
+              <div>
+                <p className="mb-4 text-sm font-medium text-white">
+                  Top páginas últimos 30 días
+                </p>
+
+                <div className="space-y-3">
+                  {analytics.topPagesLast30Days.length ? (
+                    analytics.topPagesLast30Days.map((page) => (
+                      <div
+                        key={page.path}
+                        className="rounded-2xl border border-white/10 bg-black/40 p-4"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="truncate text-sm text-white">
+                            {page.path}
+                          </p>
+                          <p className="text-sm text-zinc-400">
+                            {page.views}
+                          </p>
+                        </div>
+
+                        <div className="mt-3 h-2 rounded-full bg-white/5">
+                          <div
+                            className="h-2 rounded-full bg-cyan-400/70"
+                            style={{
+                              width: `${Math.max(
+                                8,
+                                (page.views / topPageMaxViews) * 100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-zinc-400">
+                      Todavía no hay datos suficientes de navegación.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-4 flex items-center gap-2 text-sm font-medium text-white">
+                  <MousePointerClick className="h-4 w-4 text-fuchsia-300" />
+                  Interacciones CTA últimos 30 días
+                </p>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                      Blog
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold text-cyan-300">
+                      {analytics.ctaClicksLast30Days.blog}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                      Contacto
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold text-orange-300">
+                      {analytics.ctaClicksLast30Days.contact}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                      Pedí tu tema
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold text-violet-300">
+                      {analytics.ctaClicksLast30Days.songRequests}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+                      Comunidad
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold text-green-300">
+                      {analytics.ctaClicksLast30Days.whatsapp}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-4 text-sm leading-6 text-zinc-400">
+                  Esta base ya nos permite medir audiencia web y comportamiento
+                  inicial. El próximo paso natural es agregar series temporales y
+                  gráficos interactivos.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-white/10 bg-zinc-950/80 text-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <BarChart3 className="h-5 w-5 text-cyan-300" />
+              Próxima capa
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-200">
+              Con la fundación analytics lista, la siguiente rama puede sumar
+              agregaciones por día, gráficos de tendencia, eventos durante
+              transmisión y, más adelante, integración con YouTube.
+            </div>
+
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
+                • Serie diaria de visitas
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
+                • Picos durante transmisión
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
+                • CTR de sponsors y comunidad
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-300">
+                • Charts interactivos y lectura ejecutiva
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-3">
@@ -293,50 +480,19 @@ export default async function AdminDashboardPage() {
 
         <Card className="border-white/10 bg-zinc-950/80 text-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <BarChart3 className="h-5 w-5 text-cyan-300" />
-              Próxima capa: analytics y audiencia
-            </CardTitle>
+            <CardTitle>Resumen operativo</CardTitle>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-200">
-              En la siguiente fase vamos a incorporar métricas reales de audiencia web, visitas por período, picos durante transmisión, interacción con sponsors y, si conviene, conexión con YouTube.
+          <CardContent className="space-y-3 text-sm text-zinc-400">
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+              El dashboard ya combina operación editorial y primeros datos de audiencia.
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                  Audiencia diaria
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">—</p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                  Audiencia semanal
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">—</p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                  Audiencia mensual
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">—</p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                  Audiencia anual
-                </p>
-                <p className="mt-3 text-2xl font-semibold text-white">—</p>
-              </div>
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+              Esto nos da una base concreta para medir crecimiento del proyecto y valor comercial para sponsors.
             </div>
-
-            <p className="text-sm leading-6 text-zinc-400">
-              Esta estructura ya deja el dashboard listo para enchufar charts interactivos y KPIs de negocio en la próxima rama.
-            </p>
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
+              El siguiente paso es sumar agregaciones históricas y visualización en charts interactivos.
+            </div>
           </CardContent>
         </Card>
       </section>

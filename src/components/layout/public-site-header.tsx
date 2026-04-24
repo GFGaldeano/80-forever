@@ -4,24 +4,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MessageCircle, Radio } from "lucide-react";
 
+import { TrackedLink } from "@/components/analytics/tracked-link";
 import { siteConfig } from "@/lib/config/site";
 
 const navItems = [
   {
     label: "Inicio",
     href: "/",
+    action: "nav_home",
   },
   {
     label: "Blog",
     href: "/blog",
+    action: "nav_blog",
   },
   {
     label: "Pedí tu tema",
     href: "/pedi-tu-tema",
+    action: "nav_song_requests",
   },
   {
     label: "Contacto",
     href: "/contacto",
+    action: "nav_contact",
   },
 ];
 
@@ -93,28 +98,32 @@ export function PublicSiteHeader() {
               const active = isActivePath(pathname, item.href);
 
               return (
-                <Link
+                <TrackedLink
                   key={item.href}
                   href={item.href}
+                  eventAction={item.action}
+                  eventLabel={item.label}
                   className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getNavLinkClass(
                     item.label,
                     active
                   )}`}
                 >
                   {item.label}
-                </Link>
+                </TrackedLink>
               );
             })}
 
-            <a
+            <TrackedLink
               href={siteConfig.whatsappCommunityUrl}
               target="_blank"
               rel="noreferrer"
+              eventAction="whatsapp_community"
+              eventLabel="Comunidad"
               className="inline-flex items-center gap-2 rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-300 transition hover:bg-green-500/15"
             >
               <MessageCircle className="h-4 w-4" />
               Comunidad
-            </a>
+            </TrackedLink>
           </div>
         </div>
       </div>
