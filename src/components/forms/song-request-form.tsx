@@ -9,6 +9,7 @@ import {
   songRequestSchema,
   type SongRequestInput,
 } from "@/lib/validators/song-requests";
+import { useDictionary, useLocale } from "@/i18n/locale-context";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,12 +31,20 @@ const initialState: SongRequestInput = {
   socialHandle: "",
 };
 
+function getLocalizedPublicHref(locale: string, path: string) {
+  if (path === "/") return `/${locale}`;
+  return `/${locale}${path}`;
+}
+
 export function SongRequestForm() {
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState<SongRequestInput>(initialState);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const locale = useLocale();
+  const dictionary = useDictionary();
 
   const setField =
     <K extends keyof SongRequestInput>(field: K) =>
@@ -55,9 +64,7 @@ export function SongRequestForm() {
     const parsed = songRequestSchema.safeParse(form);
 
     if (!parsed.success) {
-      setErrorMessage(
-        parsed.error.issues[0]?.message ?? "Revisá los datos ingresados."
-      );
+      setErrorMessage(dictionary.songRequestForm.invalidData);
       return;
     }
 
@@ -78,9 +85,7 @@ export function SongRequestForm() {
         return;
       }
 
-      setSuccessMessage(
-        "Tu pedido fue enviado correctamente. ¡Gracias por participar!"
-      );
+      setSuccessMessage(dictionary.songRequestForm.success);
       setForm(initialState);
       setIsSubmitted(true);
     });
@@ -90,10 +95,11 @@ export function SongRequestForm() {
     return (
       <Card className="border-white/10 bg-zinc-950/80 text-white">
         <CardHeader>
-          <CardTitle className="text-2xl">¡Pedido enviado!</CardTitle>
+          <CardTitle className="text-2xl">
+            {dictionary.songRequestForm.submittedTitle}
+          </CardTitle>
           <CardDescription className="text-zinc-400">
-            Tu canción quedó registrada correctamente dentro del sistema de
-            80&apos;s Forever.
+            {dictionary.songRequestForm.submittedDescription}
           </CardDescription>
         </CardHeader>
 
@@ -104,10 +110,10 @@ export function SongRequestForm() {
 
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/"
+              href={getLocalizedPublicHref(locale, "/")}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-medium text-black transition hover:bg-zinc-200"
             >
-              Volver al inicio
+              {dictionary.songRequestPage.backHome}
             </Link>
 
             <button
@@ -120,7 +126,7 @@ export function SongRequestForm() {
               }}
               className="inline-flex h-11 items-center justify-center rounded-xl border border-white/10 bg-black/50 px-5 text-sm font-medium text-white transition hover:bg-white/[0.04]"
             >
-              Enviar otro pedido
+              {dictionary.songRequestForm.sendAnother}
             </button>
           </div>
         </CardContent>
@@ -131,10 +137,11 @@ export function SongRequestForm() {
   return (
     <Card className="border-white/10 bg-zinc-950/80 text-white">
       <CardHeader>
-        <CardTitle className="text-2xl">Pedí tu tema</CardTitle>
+        <CardTitle className="text-2xl">
+          {dictionary.songRequestForm.title}
+        </CardTitle>
         <CardDescription className="text-zinc-400">
-          Dejanos tu canción, artista o dedicatoria para futuras emisiones de
-          80&apos;s Forever.
+          {dictionary.songRequestForm.description}
         </CardDescription>
       </CardHeader>
 
@@ -142,23 +149,27 @@ export function SongRequestForm() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid gap-5 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="nameAlias">Nombre o alias</Label>
+              <Label htmlFor="nameAlias">
+                {dictionary.songRequestForm.nameAlias}
+              </Label>
               <Input
                 id="nameAlias"
                 value={form.nameAlias}
                 onChange={(e) => setField("nameAlias")(e.target.value)}
-                placeholder="Ej. Gustavo / DJ Retro"
+                placeholder={dictionary.songRequestForm.nameAliasPlaceholder}
                 className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="socialHandle">Red social (opcional)</Label>
+              <Label htmlFor="socialHandle">
+                {dictionary.songRequestForm.socialHandle}
+              </Label>
               <Input
                 id="socialHandle"
                 value={form.socialHandle}
                 onChange={(e) => setField("socialHandle")(e.target.value)}
-                placeholder="@usuario"
+                placeholder={dictionary.songRequestForm.socialHandlePlaceholder}
                 className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
               />
             </div>
@@ -166,42 +177,45 @@ export function SongRequestForm() {
 
           <div className="grid gap-5 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="songTitle">Tema</Label>
+              <Label htmlFor="songTitle">
+                {dictionary.songRequestForm.songTitle}
+              </Label>
               <Input
                 id="songTitle"
                 value={form.songTitle}
                 onChange={(e) => setField("songTitle")(e.target.value)}
-                placeholder="Ej. Take On Me"
+                placeholder={dictionary.songRequestForm.songTitlePlaceholder}
                 className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="artistName">Artista</Label>
+              <Label htmlFor="artistName">
+                {dictionary.songRequestForm.artistName}
+              </Label>
               <Input
                 id="artistName"
                 value={form.artistName}
                 onChange={(e) => setField("artistName")(e.target.value)}
-                placeholder="Ej. A-ha"
+                placeholder={dictionary.songRequestForm.artistNamePlaceholder}
                 className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message">Mensaje o dedicatoria (opcional)</Label>
+            <Label htmlFor="message">{dictionary.songRequestForm.message}</Label>
             <Textarea
               id="message"
               value={form.message}
               onChange={(e) => setField("message")(e.target.value)}
-              placeholder="Contanos por qué querés escuchar este tema..."
+              placeholder={dictionary.songRequestForm.messagePlaceholder}
               className="min-h-[120px] rounded-2xl border-white/10 bg-black/60 text-white"
             />
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-4 text-sm text-zinc-400">
-            Tu pedido no garantiza salida inmediata al aire. Se revisará dentro
-            de la programación editorial del canal.
+            {dictionary.songRequestForm.helper}
           </div>
 
           <div className="min-h-11">
@@ -224,7 +238,9 @@ export function SongRequestForm() {
             className="h-12 rounded-xl bg-white text-black hover:bg-zinc-200"
           >
             <Send className="mr-2 h-4 w-4" />
-            {isPending ? "Enviando..." : "Enviar pedido"}
+            {isPending
+              ? dictionary.songRequestForm.submitting
+              : dictionary.songRequestForm.submit}
           </Button>
         </form>
       </CardContent>
