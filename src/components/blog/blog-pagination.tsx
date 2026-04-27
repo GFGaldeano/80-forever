@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+
+import { useDictionary, useLocale } from "@/i18n/locale-context";
 
 type BlogPaginationProps = {
   currentPage: number;
@@ -64,17 +68,19 @@ export function BlogPagination({
   basePath = "/blog",
   query,
 }: Readonly<BlogPaginationProps>) {
+  const locale = useLocale();
+  const dictionary = useDictionary();
+
   if (totalPages <= 1) {
     return null;
   }
 
   const pageNumbers = getPageNumbers(currentPage, totalPages);
+  const connector = locale === "en" ? "of" : "de";
+  const ariaLabel = locale === "en" ? "Blog pagination" : "Paginación del blog";
 
   return (
-    <nav
-      aria-label="Paginación del blog"
-      className="mt-10 flex flex-col items-center gap-4"
-    >
+    <nav aria-label={ariaLabel} className="mt-10 flex flex-col items-center gap-4">
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Link
           href={buildPageHref(basePath, currentPage - 1, query)}
@@ -85,7 +91,7 @@ export function BlogPagination({
               : "border border-white/10 bg-black/40 text-white hover:bg-white/[0.04]"
           }`}
         >
-          Anterior
+          {dictionary.common.previous}
         </Link>
 
         {pageNumbers.map((item, index) => {
@@ -127,12 +133,12 @@ export function BlogPagination({
               : "border border-white/10 bg-black/40 text-white hover:bg-white/[0.04]"
           }`}
         >
-          Siguiente
+          {dictionary.common.next}
         </Link>
       </div>
 
       <p className="text-sm text-zinc-500">
-        Página {currentPage} de {totalPages}
+        {dictionary.blogPage.pageLabel} {currentPage} {connector} {totalPages}
       </p>
     </nav>
   );

@@ -1,4 +1,7 @@
+"use client";
+
 import type { PublicStreamConfig } from "@/lib/stream/get-public-stream-config";
+import { useLocale } from "@/i18n/locale-context";
 import { PublicStreamPlaceholder } from "@/components/streaming/public-stream-placeholder";
 
 type PublicStreamPlayerProps = {
@@ -8,15 +11,18 @@ type PublicStreamPlayerProps = {
 export function PublicStreamPlayer({
   stream,
 }: Readonly<PublicStreamPlayerProps>) {
+  const locale = useLocale();
   const status = stream?.status ?? "offline";
   const hasEmbed =
     (status === "live" || status === "replay") && Boolean(stream?.embed_url);
+
+  const sectionTitle = locale === "en" ? "Main signal" : "Señal principal";
 
   return (
     <section className="overflow-hidden rounded-[28px] border border-white/10 bg-zinc-950/80 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_20px_80px_rgba(0,0,0,0.55)]">
       <div className="border-b border-white/10 px-5 py-4">
         <p className="text-xs uppercase tracking-[0.24em] text-zinc-500 [font-family:var(--font-orbitron)]">
-          Señal principal
+          {sectionTitle}
         </p>
       </div>
 

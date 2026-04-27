@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { PublicSponsorAsset } from "@/lib/sponsors/get-public-sponsor-assets";
+import { useLocale } from "@/i18n/locale-context";
 import { PublicSponsorBannerCard } from "@/components/sponsors/public-sponsor-banner-card";
 
 type PublicSponsorCarouselProps = {
@@ -22,6 +23,7 @@ export function PublicSponsorCarousel({
 }: Readonly<PublicSponsorCarouselProps>) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const locale = useLocale();
 
   const safeAssets = useMemo(
     () => assets.filter((asset) => asset.asset_url),
@@ -65,12 +67,16 @@ export function PublicSponsorCarousel({
           <div className="flex items-center gap-2">
             {safeAssets.map((asset, index) => {
               const isActive = index === normalizedActiveIndex;
+              const ariaLabel =
+                locale === "en"
+                  ? `Go to sponsor ${index + 1}`
+                  : `Ir al sponsor ${index + 1}`;
 
               return (
                 <button
                   key={asset.id}
                   type="button"
-                  aria-label={`Ir al sponsor ${index + 1}`}
+                  aria-label={ariaLabel}
                   onClick={() => setActiveIndex(index)}
                   className={`h-2.5 rounded-full transition ${
                     isActive
