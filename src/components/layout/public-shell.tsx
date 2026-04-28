@@ -1,14 +1,27 @@
 import type { ReactNode } from "react";
 
+import type { Locale } from "@/i18n/config";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 import { PublicSiteFooter } from "@/components/layout/public-site-footer";
 import { PublicSiteHeader } from "@/components/layout/public-site-header";
+import { getSiteSettings } from "@/lib/settings/get-site-settings";
 
 type PublicShellProps = {
   children: ReactNode;
+  locale?: Locale;
 };
 
-export function PublicShell({ children }: Readonly<PublicShellProps>) {
+export async function PublicShell({
+  children,
+  locale = "es",
+}: Readonly<PublicShellProps>) {
+  const settings = await getSiteSettings(locale);
+
+  const siteName = settings.channel_name || settings.site_name;
+  const slogan = settings.slogan || settings.tagline;
+  const shortDescription = settings.short_description || "";
+  const whatsappCommunityUrl = settings.whatsapp_community_url || "";
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#000000] text-white">
       <div className="pointer-events-none absolute inset-0">
@@ -19,9 +32,18 @@ export function PublicShell({ children }: Readonly<PublicShellProps>) {
 
       <div className="relative flex min-h-screen flex-col">
         <PageViewTracker />
-        <PublicSiteHeader />
+        <PublicSiteHeader
+          siteName={siteName}
+          slogan={slogan}
+          whatsappCommunityUrl={whatsappCommunityUrl}
+        />
         <main className="flex-1">{children}</main>
-        <PublicSiteFooter />
+        <PublicSiteFooter
+          siteName={siteName}
+          slogan={slogan}
+          shortDescription={shortDescription}
+          whatsappCommunityUrl={whatsappCommunityUrl}
+        />
       </div>
     </div>
   );

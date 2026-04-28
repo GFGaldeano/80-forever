@@ -143,15 +143,15 @@ const en = {
     noDescription: "No editorial description available.",
   },
   blogDetailPage: {
-    backToBlog: "Volver al blog",
-    notFoundTitle: "Post no encontrado",
-    moreFromCategoryPrefix: "Ver más de",
+    backToBlog: "Back to blog",
+    notFoundTitle: "Post not found",
+    moreFromCategoryPrefix: "More from",
   },
   transmissionDetailPage: {
-    backToTransmissions: "Volver a transmisiones",
-    notFoundTitle: "Transmisión no encontrada",
+    backToTransmissions: "Back to transmissions",
+    notFoundTitle: "Transmission not found",
     metadataFallbackDescription:
-      "Reviví esta emisión en el historial de transmisiones de 80's Forever.",
+      "Relive this broadcast in the 80's Forever transmissions archive.",
   },
 };
 
