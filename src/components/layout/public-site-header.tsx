@@ -6,7 +6,6 @@ import { MessageCircle, Radio } from "lucide-react";
 
 import { TrackedLink } from "@/components/analytics/tracked-link";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
-import { siteConfig } from "@/lib/config/site";
 import { isValidLocale } from "@/i18n/config";
 import { useDictionary, useLocale } from "@/i18n/locale-context";
 
@@ -37,6 +36,12 @@ const navItems = [
     action: "nav_contact",
   },
 ] as const;
+
+type PublicSiteHeaderProps = {
+  siteName: string;
+  slogan: string;
+  whatsappCommunityUrl: string;
+};
 
 function localizeHref(locale: string, href: string) {
   if (href === "/") return `/${locale}`;
@@ -98,7 +103,11 @@ function getNavLinkClass(key: string, active: boolean) {
     : "border border-white/10 bg-black/40 text-white hover:bg-white/[0.04]";
 }
 
-export function PublicSiteHeader() {
+export function PublicSiteHeader({
+  siteName,
+  slogan,
+  whatsappCommunityUrl,
+}: Readonly<PublicSiteHeaderProps>) {
   const pathname = usePathname();
   const locale = useLocale();
   const dictionary = useDictionary();
@@ -120,9 +129,9 @@ export function PublicSiteHeader() {
 
             <div className="text-left">
               <p className="text-xs uppercase tracking-[0.26em] text-zinc-500 [font-family:var(--font-orbitron)]">
-                80&apos;s Forever
+                {siteName}
               </p>
-              <p className="text-sm font-medium text-white">{siteConfig.slogan}</p>
+              <p className="text-sm font-medium text-white">{slogan}</p>
             </div>
           </Link>
 
@@ -130,7 +139,7 @@ export function PublicSiteHeader() {
             <LanguageSwitcher />
 
             <TrackedLink
-              href={siteConfig.whatsappCommunityUrl}
+              href={whatsappCommunityUrl}
               target="_blank"
               rel="noreferrer"
               eventAction="whatsapp_community"

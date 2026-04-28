@@ -3,7 +3,6 @@
 import { MapPin, MessageCircle } from "lucide-react";
 
 import { TrackedLink } from "@/components/analytics/tracked-link";
-import { siteConfig } from "@/lib/config/site";
 import { useDictionary, useLocale } from "@/i18n/locale-context";
 
 function localizeHref(locale: string, href: string) {
@@ -14,21 +13,33 @@ function localizeHref(locale: string, href: string) {
 const MAPS_URL =
   "https://www.google.com/maps/search/?api=1&query=Monteros%2C+Tucum%C3%A1n%2C+Argentina";
 
-export function PublicSiteFooter() {
+type PublicSiteFooterProps = {
+  siteName: string;
+  slogan: string;
+  shortDescription: string;
+  whatsappCommunityUrl: string;
+};
+
+export function PublicSiteFooter({
+  siteName,
+  slogan,
+  shortDescription,
+  whatsappCommunityUrl,
+}: Readonly<PublicSiteFooterProps>) {
   const locale = useLocale();
   const dictionary = useDictionary();
 
   const exploreLabel = locale === "en" ? "Explore" : "Explorar";
   const communityLabel = locale === "en" ? "Community" : "Comunidad";
-  const footerDescription =
+  const fallbackDescription =
     locale === "en"
       ? "Thematic music streaming channel with a retro-premium identity, editorial content, audience participation and an active community around the 80's universe."
       : "Canal temático de streaming musical con identidad retro-premium, contenido editorial, participación de la audiencia y comunidad activa alrededor del universo 80's.";
 
   const rightsText =
     locale === "en"
-      ? `© ${new Date().getFullYear()} ${siteConfig.name}. All rights reserved.`
-      : `© ${new Date().getFullYear()} ${siteConfig.name}. Todos los derechos reservados.`;
+      ? `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`
+      : `© ${new Date().getFullYear()} ${siteName}. Todos los derechos reservados.`;
 
   const editorialText =
     locale === "en"
@@ -41,15 +52,13 @@ export function PublicSiteFooter() {
         <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
           <div>
             <p className="text-xs uppercase tracking-[0.26em] text-zinc-500 [font-family:var(--font-orbitron)]">
-              {siteConfig.name}
+              {siteName}
             </p>
 
-            <h2 className="mt-3 text-xl font-semibold text-white">
-              {siteConfig.slogan}
-            </h2>
+            <h2 className="mt-3 text-xl font-semibold text-white">{slogan}</h2>
 
             <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
-              {footerDescription}
+              {shortDescription || fallbackDescription}
             </p>
           </div>
 
@@ -105,7 +114,7 @@ export function PublicSiteFooter() {
               </TrackedLink>
 
               <TrackedLink
-                href={siteConfig.whatsappCommunityUrl}
+                href={whatsappCommunityUrl}
                 target="_blank"
                 rel="noreferrer"
                 eventAction="whatsapp_community"

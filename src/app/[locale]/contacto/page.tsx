@@ -35,7 +35,7 @@ export async function generateMetadata({
     return {};
   }
 
-  const seo = await getPublicSiteSeo();
+  const seo = await getPublicSiteSeo(locale);
   const dictionary = await getDictionary(locale);
 
   const title = `${dictionary.contactPage.title} | ${seo.siteName}`;

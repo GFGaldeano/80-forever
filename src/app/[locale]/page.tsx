@@ -63,7 +63,7 @@ export async function generateMetadata({
     return {};
   }
 
-  const seo = await getPublicSiteSeo();
+  const seo = await getPublicSiteSeo(locale);
   const title = seo.defaultSeoTitle || seo.siteName;
   const description = seo.defaultSeoDescription || seo.description;
   const canonical = buildAbsoluteSiteUrl(seo.siteUrl, `/${locale}`);
@@ -109,7 +109,7 @@ export default async function LocalizedHomePage({
   }
 
   const [stream, sponsors, seo, dictionary] = await Promise.all([
-    getPublicStreamConfig(),
+    getPublicStreamConfig(locale),
     getPublicSponsorAssets(),
     getPublicSiteSeo(),
     getDictionary(locale),
@@ -133,7 +133,7 @@ export default async function LocalizedHomePage({
   });
 
   return (
-    <PublicShell>
+    <PublicShell locale={locale}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(organizationJsonLd) }}

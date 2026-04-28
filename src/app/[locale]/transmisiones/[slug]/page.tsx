@@ -57,9 +57,9 @@ export async function generateMetadata({
   }
 
   const [seo, dictionary, transmission] = await Promise.all([
-    getPublicSiteSeo(),
+    getPublicSiteSeo(locale),
     getDictionary(locale),
-    getPublicTransmissionBySlug(slug),
+    getPublicTransmissionBySlug(slug, locale),
   ]);
 
   if (!transmission) {
@@ -130,9 +130,9 @@ export default async function LocalizedTransmissionDetailPage({
   }
 
   const [seo, dictionary, transmission] = await Promise.all([
-    getPublicSiteSeo(),
+    getPublicSiteSeo(locale),
     getDictionary(locale),
-    getPublicTransmissionBySlug(slug),
+    getPublicTransmissionBySlug(slug, locale),
   ]);
 
   if (!transmission) {
@@ -175,13 +175,15 @@ export default async function LocalizedTransmissionDetailPage({
     embedUrl: transmission.youtube_embed_url || undefined,
     contentUrl: transmission.youtube_watch_url || undefined,
     uploadDate:
-      transmission.aired_at || transmission.scheduled_at || transmission.created_at,
+      transmission.aired_at ||
+      transmission.scheduled_at ||
+      transmission.created_at,
     publisherName: seo.siteName,
     publisherLogo: seo.logoUrl,
   });
 
   return (
-    <PublicShell>
+    <PublicShell locale={locale}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}

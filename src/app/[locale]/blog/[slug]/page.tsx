@@ -59,9 +59,9 @@ export async function generateMetadata({
   }
 
   const [seo, dictionary, post] = await Promise.all([
-    getPublicSiteSeo(),
+    getPublicSiteSeo(locale),
     getDictionary(locale),
-    getPublicBlogPostBySlug(slug),
+    getPublicBlogPostBySlug(slug, locale),
   ]);
 
   if (!post) {
@@ -124,9 +124,9 @@ export default async function LocalizedBlogPostDetailPage({
   }
 
   const [seo, dictionary, post] = await Promise.all([
-    getPublicSiteSeo(),
+    getPublicSiteSeo(locale),
     getDictionary(locale),
-    getPublicBlogPostBySlug(slug),
+    getPublicBlogPostBySlug(slug, locale),
   ]);
 
   if (!post) {
@@ -157,7 +157,7 @@ export default async function LocalizedBlogPostDetailPage({
   ]);
 
   return (
-    <PublicShell>
+    <PublicShell locale={locale}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}

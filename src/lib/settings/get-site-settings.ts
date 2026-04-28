@@ -1,9 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/config/site";
+import { createClient } from "@/lib/supabase/server";
+import type { Locale } from "@/i18n/config";
 
 export type SiteSettings = {
   site_key: "primary";
+  site_name: string;
   channel_name: string;
+  tagline: string;
   slogan: string;
   short_description: string;
   contact_email: string;
@@ -15,6 +18,8 @@ export type SiteSettings = {
   default_seo_title: string;
   default_seo_description: string;
   youtube_channel_url: string;
+  default_offline_message: string;
+  primary_cta_label: string;
   global_notice: string;
   institutional_text: string;
   updated_by: string | null;
@@ -23,8 +28,11 @@ export type SiteSettings = {
 };
 
 type SiteSettingsRow = {
+  id: string;
   site_key: "primary";
+  site_name: string | null;
   channel_name: string | null;
+  tagline: string | null;
   slogan: string | null;
   short_description: string | null;
   contact_email: string | null;
@@ -36,6 +44,8 @@ type SiteSettingsRow = {
   default_seo_title: string | null;
   default_seo_description: string | null;
   youtube_channel_url: string | null;
+  default_offline_message: string | null;
+  primary_cta_label: string | null;
   global_notice: string | null;
   institutional_text: string | null;
   updated_by: string | null;
@@ -43,10 +53,27 @@ type SiteSettingsRow = {
   updated_at: string | null;
 };
 
+type SiteSettingsTranslationRow = {
+  locale: Locale;
+  site_name: string | null;
+  channel_name: string | null;
+  tagline: string | null;
+  slogan: string | null;
+  short_description: string | null;
+  default_offline_message: string | null;
+  primary_cta_label: string | null;
+  default_seo_title: string | null;
+  default_seo_description: string | null;
+  global_notice: string | null;
+  institutional_text: string | null;
+};
+
 function getDefaultSiteSettings(): SiteSettings {
   return {
     site_key: "primary",
+    site_name: siteConfig.name,
     channel_name: siteConfig.name,
+    tagline: siteConfig.slogan,
     slogan: siteConfig.slogan,
     short_description: "",
     contact_email: "",
@@ -58,6 +85,8 @@ function getDefaultSiteSettings(): SiteSettings {
     default_seo_title: siteConfig.name,
     default_seo_description: "",
     youtube_channel_url: "",
+    default_offline_message: "",
+    primary_cta_label: "",
     global_notice: "",
     institutional_text: "",
     updated_by: null,
@@ -66,15 +95,30 @@ function getDefaultSiteSettings(): SiteSettings {
   };
 }
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+function getPreferredTranslation(
+  translations: SiteSettingsTranslationRow[],
+  locale: Locale
+) {
+  return (
+    translations.find((item) => item.locale === locale) ??
+    translations.find((item) => item.locale === "es") ??
+    null
+  );
+}
+
+export async function getSiteSettings(locale: Locale = "es"): Promise<SiteSettings> {
   const supabase = await createClient();
+  const defaults = getDefaultSiteSettings();
 
   const { data, error } = await supabase
     .from("site_settings")
     .select(
       `
+      id,
       site_key,
+      site_name,
       channel_name,
+      tagline,
       slogan,
       short_description,
       contact_email,
@@ -86,6 +130,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       default_seo_title,
       default_seo_description,
       youtube_channel_url,
+      default_offline_message,
+      primary_cta_label,
       global_notice,
       institutional_text,
       updated_by,
@@ -95,8 +141,6 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     )
     .eq("site_key", "primary")
     .maybeSingle();
-
-  const defaults = getDefaultSiteSettings();
 
   if (error || !data) {
     if (error) {
@@ -108,11 +152,50 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
   const row = data as SiteSettingsRow;
 
+  const { data: translationsData, error: translationsError } = await supabase
+    .from("site_settings_translations")
+    .select(
+      `
+      locale,
+      site_name,
+      channel_name,
+      tagline,
+      slogan,
+      short_description,
+      default_offline_message,
+      primary_cta_label,
+      default_seo_title,
+      default_seo_description,
+      global_notice,
+      institutional_text
+    `
+    )
+    .eq("site_settings_id", row.id)
+    .in("locale", [locale, "es"]);
+
+  if (translationsError) {
+    console.error(
+      "Error cargando traducciones de site settings:",
+      translationsError.message
+    );
+  }
+
+  const translation = getPreferredTranslation(
+    (translationsData as SiteSettingsTranslationRow[] | null) ?? [],
+    locale
+  );
+
   return {
     site_key: "primary",
-    channel_name: row.channel_name || defaults.channel_name,
-    slogan: row.slogan || defaults.slogan,
-    short_description: row.short_description || defaults.short_description,
+    site_name: translation?.site_name || row.site_name || defaults.site_name,
+    channel_name:
+      translation?.channel_name || row.channel_name || defaults.channel_name,
+    tagline: translation?.tagline || row.tagline || defaults.tagline,
+    slogan: translation?.slogan || row.slogan || defaults.slogan,
+    short_description:
+      translation?.short_description ||
+      row.short_description ||
+      defaults.short_description,
     contact_email: row.contact_email || defaults.contact_email,
     whatsapp_community_url:
       row.whatsapp_community_url || defaults.whatsapp_community_url,
@@ -121,13 +204,29 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     default_social_image_url:
       row.default_social_image_url || defaults.default_social_image_url,
     site_url: row.site_url || defaults.site_url,
-    default_seo_title: row.default_seo_title || defaults.default_seo_title,
+    default_seo_title:
+      translation?.default_seo_title ||
+      row.default_seo_title ||
+      defaults.default_seo_title,
     default_seo_description:
-      row.default_seo_description || defaults.default_seo_description,
-    youtube_channel_url:
-      row.youtube_channel_url || defaults.youtube_channel_url,
-    global_notice: row.global_notice || defaults.global_notice,
-    institutional_text: row.institutional_text || defaults.institutional_text,
+      translation?.default_seo_description ||
+      row.default_seo_description ||
+      defaults.default_seo_description,
+    youtube_channel_url: row.youtube_channel_url || defaults.youtube_channel_url,
+    default_offline_message:
+      translation?.default_offline_message ||
+      row.default_offline_message ||
+      defaults.default_offline_message,
+    primary_cta_label:
+      translation?.primary_cta_label ||
+      row.primary_cta_label ||
+      defaults.primary_cta_label,
+    global_notice:
+      translation?.global_notice || row.global_notice || defaults.global_notice,
+    institutional_text:
+      translation?.institutional_text ||
+      row.institutional_text ||
+      defaults.institutional_text,
     updated_by: row.updated_by,
     created_at: row.created_at,
     updated_at: row.updated_at,

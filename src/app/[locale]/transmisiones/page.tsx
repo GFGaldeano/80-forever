@@ -56,7 +56,7 @@ export async function generateMetadata({
     return {};
   }
 
-  const seo = await getPublicSiteSeo();
+  const seo = await getPublicSiteSeo(locale);
   const dictionary = await getDictionary(locale);
 
   const title = `${dictionary.transmissionsPage.title} | ${seo.siteName}`;
@@ -107,8 +107,8 @@ export default async function LocalizedTransmissionsPage({
   }
 
   const [transmissions, seo, dictionary] = await Promise.all([
-    getPublicTransmissions(),
-    getPublicSiteSeo(),
+    getPublicTransmissions(locale),
+    getPublicSiteSeo(locale),
     getDictionary(locale),
   ]);
 
@@ -136,7 +136,7 @@ export default async function LocalizedTransmissionsPage({
   ]);
 
   return (
-    <PublicShell>
+    <PublicShell locale={locale}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(collectionJsonLd) }}

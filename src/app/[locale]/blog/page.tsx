@@ -67,7 +67,7 @@ function buildBlogPath(
   options?: {
     category?: string;
     page?: number;
-  }
+  },
 ) {
   const params = new URLSearchParams();
 
@@ -86,7 +86,7 @@ function buildBlogPath(
 function buildCategoryDescription(
   locale: Locale,
   siteName: string,
-  categoryName: string
+  categoryName: string,
 ) {
   if (locale === "en") {
     return `Explore ${categoryName} posts in the ${siteName} blog.`;
@@ -106,12 +106,12 @@ export async function generateMetadata({
   }
 
   const dictionary = await getDictionary(locale);
-  const seo = await getPublicSiteSeo();
+  const seo = await getPublicSiteSeo(locale);
   const resolvedSearchParams = (await searchParams) ?? {};
   const currentPage = getSafePage(resolvedSearchParams.page);
   const categorySlug = resolvedSearchParams.category?.trim();
 
-  const categories = await getBlogCategories();
+  const categories = await getBlogCategories(locale);
   const selectedCategory = categorySlug
     ? categories.find((category) => category.slug === categorySlug)
     : null;
@@ -134,7 +134,7 @@ export async function generateMetadata({
     buildBlogPath(locale, {
       category: selectedCategory?.slug,
       page: currentPage,
-    })
+    }),
   );
 
   return {
@@ -148,14 +148,14 @@ export async function generateMetadata({
           buildBlogPath("es", {
             category: selectedCategory?.slug,
             page: currentPage,
-          })
+          }),
         ),
         en: buildAbsoluteSiteUrl(
           seo.siteUrl,
           buildBlogPath("en", {
             category: selectedCategory?.slug,
             page: currentPage,
-          })
+          }),
         ),
       },
     },
@@ -191,12 +191,12 @@ export default async function LocalizedBlogPage({
   }
 
   const dictionary = await getDictionary(locale);
-  const seo = await getPublicSiteSeo();
+  const seo = await getPublicSiteSeo(locale);
   const resolvedSearchParams = (await searchParams) ?? {};
   const currentPage = getSafePage(resolvedSearchParams.page);
   const categorySlug = resolvedSearchParams.category?.trim();
 
-  const categories = await getBlogCategories();
+  const categories = await getBlogCategories(locale);
   const selectedCategory = categorySlug
     ? categories.find((category) => category.slug === categorySlug)
     : null;
@@ -206,6 +206,7 @@ export default async function LocalizedBlogPage({
   }
 
   const { posts, totalCount, totalPages } = await getPublicBlogPosts({
+    locale,
     page: currentPage,
     pageSize: BLOG_POSTS_PER_PAGE,
     categoryId: selectedCategory?.id,
@@ -220,7 +221,7 @@ export default async function LocalizedBlogPage({
     buildBlogPath(locale, {
       category: selectedCategory?.slug,
       page: currentPage,
-    })
+    }),
   );
 
   const collectionJsonLd = buildCollectionPageJsonLd({
@@ -236,19 +237,22 @@ export default async function LocalizedBlogPage({
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     {
       name: dictionary.common.home,
-      url: buildAbsoluteSiteUrl(seo.siteUrl, getLocalizedPublicHref(locale, "/")),
+      url: buildAbsoluteSiteUrl(
+        seo.siteUrl,
+        getLocalizedPublicHref(locale, "/"),
+      ),
     },
     {
       name: dictionary.common.blog,
       url: buildAbsoluteSiteUrl(
         seo.siteUrl,
-        getLocalizedPublicHref(locale, "/blog")
+        getLocalizedPublicHref(locale, "/blog"),
       ),
     },
   ]);
 
   return (
-    <PublicShell>
+    <PublicShell locale={locale}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLd(collectionJsonLd) }}
@@ -280,7 +284,7 @@ export default async function LocalizedBlogPage({
               className={`inline-flex rounded-xl px-4 py-2 text-sm transition ${getBlogCategoryFilterClass(
                 {
                   active: !selectedCategory,
-                }
+                },
               )}`}
             >
               {dictionary.common.all}
@@ -296,7 +300,7 @@ export default async function LocalizedBlogPage({
                   {
                     slug: category.slug,
                     active: selectedCategory?.slug === category.slug,
-                  }
+                  },
                 )}`}
               >
                 {category.name}
@@ -327,7 +331,11 @@ export default async function LocalizedBlogPage({
                 <div className="p-6">
                   <div className="flex flex-wrap items-center gap-3">
                     {post.category ? (
-                      <Badge className={getBlogCategoryBadgeClass(post.category.slug)}>
+                      <Badge
+                        className={getBlogCategoryBadgeClass(
+                          post.category.slug,
+                        )}
+                      >
                         {post.category.name}
                       </Badge>
                     ) : null}
