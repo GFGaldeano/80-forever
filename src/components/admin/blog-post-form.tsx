@@ -32,7 +32,19 @@ type BlogPostFormProps = {
   categories: BlogCategory[];
 };
 
-type FormState = BlogPostInput;
+type TranslationFormState = {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+};
+
+type FormState = BlogPostInput & {
+  titleEn: string;
+  slugEn: string;
+  excerptEn: string;
+  contentEn: string;
+};
 
 function toDateTimeLocal(value?: string | null) {
   if (!value) return "";
@@ -47,21 +59,51 @@ function toNullable(value?: string) {
   return trimmed.length ? trimmed : null;
 }
 
+function getEnglishInitialState(
+  initialPost: AdminBlogPost | null | undefined
+): TranslationFormState {
+  return {
+    title: initialPost?.translations.en?.title ?? "",
+    slug: initialPost?.translations.en?.slug ?? "",
+    excerpt: initialPost?.translations.en?.excerpt ?? "",
+    content: initialPost?.translations.en?.content ?? "",
+  };
+}
+
 function getInitialState(
   initialPost: AdminBlogPost | null | undefined,
   categories: BlogCategory[]
 ): FormState {
   return {
-    title: initialPost?.title ?? "",
-    slug: initialPost?.slug ?? "",
+    title: initialPost?.translations.es?.title ?? initialPost?.title ?? "",
+    slug: initialPost?.translations.es?.slug ?? initialPost?.slug ?? "",
     categoryId: initialPost?.category_id ?? categories[0]?.id ?? "",
-    excerpt: initialPost?.excerpt ?? "",
-    content: initialPost?.content ?? "",
+    excerpt:
+      initialPost?.translations.es?.excerpt ??
+      initialPost?.excerpt ??
+      "",
+    content:
+      initialPost?.translations.es?.content ??
+      initialPost?.content ??
+      "",
     coverImageUrl: initialPost?.cover_image_url ?? "",
     cloudinaryPublicId: initialPost?.cloudinary_public_id ?? "",
     publishedAt: toDateTimeLocal(initialPost?.published_at),
     isVisible: initialPost?.is_visible ?? true,
+    titleEn: getEnglishInitialState(initialPost).title,
+    slugEn: getEnglishInitialState(initialPost).slug,
+    excerptEn: getEnglishInitialState(initialPost).excerpt,
+    contentEn: getEnglishInitialState(initialPost).content,
   };
+}
+
+function hasEnglishContent(state: FormState) {
+  return [
+    state.titleEn,
+    state.slugEn,
+    state.excerptEn,
+    state.contentEn,
+  ].some((value) => value.trim().length > 0);
 }
 
 export function BlogPostForm({
@@ -110,12 +152,29 @@ export function BlogPostForm({
       }));
     };
 
-  const generateSlug = () => {
+  const generateSlugEs = () => {
     setForm((prev) => ({
       ...prev,
       slug: slugifyBlogTitle(prev.title),
     }));
   };
+
+  const generateSlugEn = () => {
+    setForm((prev) => ({
+      ...prev,
+      slugEn: slugifyBlogTitle(prev.titleEn),
+    }));
+  };
+
+const copySpanishToEnglish = () => {
+  setForm((prev) => ({
+    ...prev,
+    titleEn: prev.title,
+    slugEn: slugifyBlogTitle(prev.title),
+    excerptEn: prev.excerpt ?? "",
+    contentEn: prev.content,
+  }));
+};
 
   const clearCover = () => {
     setForm((prev) => ({
@@ -192,11 +251,35 @@ export function BlogPostForm({
     setErrorMessage("");
     setSuccessMessage("");
 
-    const parsed = blogPostSchema.safeParse(form);
+    const spanishInput: BlogPostInput = {
+      title: form.title,
+      slug: form.slug,
+      categoryId: form.categoryId,
+      excerpt: form.excerpt,
+      content: form.content,
+      coverImageUrl: form.coverImageUrl,
+      cloudinaryPublicId: form.cloudinaryPublicId,
+      publishedAt: form.publishedAt,
+      isVisible: form.isVisible,
+    };
+
+    const parsed = blogPostSchema.safeParse(spanishInput);
 
     if (!parsed.success) {
       setErrorMessage(
         parsed.error.issues[0]?.message ?? "Revisá los datos ingresados."
+      );
+      return;
+    }
+
+    const englishFilled = hasEnglishContent(form);
+
+    if (
+      englishFilled &&
+      (!form.titleEn.trim() || !form.slugEn.trim() || !form.contentEn.trim())
+    ) {
+      setErrorMessage(
+        "Si completás la versión en inglés, título, slug y contenido EN son obligatorios."
       );
       return;
     }
@@ -243,7 +326,8 @@ export function BlogPostForm({
         updated_by: adminProfile.id,
       };
 
-      let error: { message: string } | null = null;
+      let blogPostId = initialPost?.id ?? null;
+      let baseError: { message: string } | null = null;
 
       if (initialPost?.id) {
         const result = await supabase
@@ -251,25 +335,93 @@ export function BlogPostForm({
           .update(payload)
           .eq("id", initialPost.id);
 
-        error = result.error;
+        baseError = result.error;
       } else {
-        const result = await supabase.from("blog_posts").insert({
-          ...payload,
-          created_by: adminProfile.id,
-        });
+        const result = await supabase
+          .from("blog_posts")
+          .insert({
+            ...payload,
+            created_by: adminProfile.id,
+          })
+          .select("id")
+          .single();
 
-        error = result.error;
+        baseError = result.error;
+        blogPostId = result.data?.id ?? null;
       }
 
-      if (error) {
-        setErrorMessage(error.message);
+      if (baseError || !blogPostId) {
+        setErrorMessage(baseError?.message ?? "No se pudo guardar el post base.");
         return;
+      }
+
+      const { error: spanishTranslationError } = await supabase
+        .from("blog_post_translations")
+        .upsert(
+          {
+            blog_post_id: blogPostId,
+            locale: "es",
+            title: parsed.data.title,
+            slug: parsed.data.slug,
+            excerpt: toNullable(parsed.data.excerpt),
+            content: parsed.data.content,
+            updated_by: adminProfile.id,
+          },
+          {
+            onConflict: "blog_post_id,locale",
+          }
+        );
+
+      if (spanishTranslationError) {
+        setErrorMessage(
+          `No se pudo guardar la traducción ES: ${spanishTranslationError.message}`
+        );
+        return;
+      }
+
+      if (englishFilled) {
+        const { error: englishTranslationError } = await supabase
+          .from("blog_post_translations")
+          .upsert(
+            {
+              blog_post_id: blogPostId,
+              locale: "en",
+              title: form.titleEn.trim(),
+              slug: form.slugEn.trim(),
+              excerpt: toNullable(form.excerptEn),
+              content: form.contentEn.trim(),
+              updated_by: adminProfile.id,
+            },
+            {
+              onConflict: "blog_post_id,locale",
+            }
+          );
+
+        if (englishTranslationError) {
+          setErrorMessage(
+            `No se pudo guardar la traducción EN: ${englishTranslationError.message}`
+          );
+          return;
+        }
+      } else {
+        const { error: deleteEnglishError } = await supabase
+          .from("blog_post_translations")
+          .delete()
+          .eq("blog_post_id", blogPostId)
+          .eq("locale", "en");
+
+        if (deleteEnglishError) {
+          setErrorMessage(
+            `No se pudo actualizar el estado de la traducción EN: ${deleteEnglishError.message}`
+          );
+          return;
+        }
       }
 
       setSuccessMessage(
         isEditing
-          ? "Post actualizado correctamente."
-          : "Post creado correctamente."
+          ? "Post y traducciones guardados correctamente."
+          : "Post y traducciones creados correctamente."
       );
 
       if (isEditing) {
@@ -292,49 +444,13 @@ export function BlogPostForm({
       <CardHeader>
         <CardTitle className="text-xl">{formTitle}</CardTitle>
         <CardDescription className="text-zinc-400">
-          Publicá efemérides, novedades del canal, bandas, solistas, avisos de
-          transmisión y contenido editorial.
+          Gestioná el post base en español y su versión en inglés. En esta fase,
+          el inglés se carga y edita manualmente.
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Título</Label>
-            <Input
-              id="title"
-              placeholder="Ej. Especial synth-pop del viernes"
-              value={form.title}
-              onChange={(e) => setField("title")(e.target.value)}
-              className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
-            />
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input
-                id="slug"
-                placeholder="especial-synth-pop-del-viernes"
-                value={form.slug}
-                onChange={(e) => setField("slug")(e.target.value)}
-                className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
-              />
-            </div>
-
-            <div className="flex items-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={generateSlug}
-                className="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-200 hover:bg-zinc-900 hover:text-white"
-              >
-                <Wand2 className="mr-2 h-4 w-4" />
-                Generar
-              </Button>
-            </div>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="categoryId">Categoría</Label>
             <select
@@ -355,15 +471,160 @@ export function BlogPostForm({
             </select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="excerpt">Extracto</Label>
-            <Textarea
-              id="excerpt"
-              placeholder="Resumen corto que aparecerá en el listado del blog..."
-              value={form.excerpt}
-              onChange={(e) => setField("excerpt")(e.target.value)}
-              className="min-h-[100px] rounded-2xl border-white/10 bg-black/60 text-white"
-            />
+          <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  Español (fuente principal)
+                </h3>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Esta versión alimenta el post base y la traducción ES.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="title">Título</Label>
+                <Input
+                  id="title"
+                  placeholder="Ej. Especial synth-pop del viernes"
+                  value={form.title}
+                  onChange={(e) => setField("title")(e.target.value)}
+                  className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="space-y-2">
+                  <Label htmlFor="slug">Slug</Label>
+                  <Input
+                    id="slug"
+                    placeholder="especial-synth-pop-del-viernes"
+                    value={form.slug}
+                    onChange={(e) => setField("slug")(e.target.value)}
+                    className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
+                  />
+                </div>
+
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateSlugEs}
+                    className="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-200 hover:bg-zinc-900 hover:text-white"
+                  >
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Generar slug ES
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="excerpt">Extracto</Label>
+                <Textarea
+                  id="excerpt"
+                  placeholder="Resumen corto que aparecerá en el listado del blog..."
+                  value={form.excerpt}
+                  onChange={(e) => setField("excerpt")(e.target.value)}
+                  className="min-h-[100px] rounded-2xl border-white/10 bg-black/60 text-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="content">Contenido</Label>
+                <Textarea
+                  id="content"
+                  placeholder="Escribí el contenido del post en español. Usá líneas en blanco para separar párrafos."
+                  value={form.content}
+                  onChange={(e) => setField("content")(e.target.value)}
+                  className="min-h-[240px] rounded-2xl border-white/10 bg-black/60 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-fuchsia-500/20 bg-fuchsia-500/5 p-5">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  English (translation)
+                </h3>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Completá esta versión para que el blog se vea correctamente en
+                  inglés.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={copySpanishToEnglish}
+                className="rounded-xl border-fuchsia-500/20 bg-fuchsia-500/10 text-fuchsia-300 hover:bg-fuchsia-500/15 hover:text-fuchsia-200"
+              >
+                Usar ES como base
+              </Button>
+            </div>
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="titleEn">Title (EN)</Label>
+                <Input
+                  id="titleEn"
+                  placeholder="Ex. Friday synth-pop special"
+                  value={form.titleEn}
+                  onChange={(e) => setField("titleEn")(e.target.value)}
+                  className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="space-y-2">
+                  <Label htmlFor="slugEn">Slug (EN)</Label>
+                  <Input
+                    id="slugEn"
+                    placeholder="friday-synth-pop-special"
+                    value={form.slugEn}
+                    onChange={(e) => setField("slugEn")(e.target.value)}
+                    className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
+                  />
+                </div>
+
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateSlugEn}
+                    className="h-12 rounded-xl border-white/10 bg-zinc-950 text-zinc-200 hover:bg-zinc-900 hover:text-white"
+                  >
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Generate EN slug
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="excerptEn">Excerpt (EN)</Label>
+                <Textarea
+                  id="excerptEn"
+                  placeholder="Short summary shown in the blog listing..."
+                  value={form.excerptEn}
+                  onChange={(e) => setField("excerptEn")(e.target.value)}
+                  className="min-h-[100px] rounded-2xl border-white/10 bg-black/60 text-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contentEn">Content (EN)</Label>
+                <Textarea
+                  id="contentEn"
+                  placeholder="Write the English version of the post here."
+                  value={form.contentEn}
+                  onChange={(e) => setField("contentEn")(e.target.value)}
+                  className="min-h-[240px] rounded-2xl border-white/10 bg-black/60 text-white"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -433,17 +694,6 @@ export function BlogPostForm({
               value={form.publishedAt}
               onChange={(e) => setField("publishedAt")(e.target.value)}
               className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="content">Contenido</Label>
-            <Textarea
-              id="content"
-              placeholder="Escribí el contenido del post. Usá líneas en blanco para separar párrafos."
-              value={form.content}
-              onChange={(e) => setField("content")(e.target.value)}
-              className="min-h-[280px] rounded-2xl border-white/10 bg-black/60 text-white"
             />
           </div>
 

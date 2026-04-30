@@ -50,9 +50,9 @@ export default async function AdminBlogPage({
           </h2>
 
           <p className="mt-3 max-w-2xl text-sm text-zinc-400">
-            Gestioná publicaciones editoriales para efemérides, novedades,
-            bandas, solistas, anuncios de transmisión y contenido institucional
-            del canal.
+            Gestioná publicaciones editoriales en español e inglés para
+            efemérides, novedades, bandas, solistas, anuncios de transmisión y
+            contenido institucional del canal.
           </p>
         </div>
 
