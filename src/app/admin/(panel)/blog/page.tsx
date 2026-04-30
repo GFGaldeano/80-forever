@@ -20,6 +20,14 @@ export default async function AdminBlogPage({
     getBlogCategories(),
   ]);
 
+  const sortedCategories = [...categories].sort((a, b) => {
+    if (a.sort_order !== b.sort_order) {
+      return a.sort_order - b.sort_order;
+    }
+
+    return a.name.localeCompare(b.name, "es");
+  });
+
   const resolvedSearchParams = (await searchParams) ?? {};
   const editId = resolvedSearchParams.edit;
 
@@ -43,7 +51,8 @@ export default async function AdminBlogPage({
 
           <p className="mt-3 max-w-2xl text-sm text-zinc-400">
             Gestioná publicaciones editoriales para efemérides, novedades,
-            anuncios de transmisión y contenido institucional del canal.
+            bandas, solistas, anuncios de transmisión y contenido institucional
+            del canal.
           </p>
         </div>
 
@@ -59,7 +68,7 @@ export default async function AdminBlogPage({
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <BlogPostForm initialPost={postToEdit} categories={categories} />
+        <BlogPostForm initialPost={postToEdit} categories={sortedCategories} />
         <BlogPostsTable posts={posts} />
       </div>
     </div>

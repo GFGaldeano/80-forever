@@ -74,7 +74,21 @@ export function BlogPostForm({
   const [isPending, startTransition] = useTransition();
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
-  const [form, setForm] = useState<FormState>(getInitialState(initialPost, categories));
+  const sortedCategories = useMemo(
+    () =>
+      [...categories].sort((a, b) => {
+        if (a.sort_order !== b.sort_order) {
+          return a.sort_order - b.sort_order;
+        }
+
+        return a.name.localeCompare(b.name, "es");
+      }),
+    [categories]
+  );
+
+  const [form, setForm] = useState<FormState>(
+    getInitialState(initialPost, sortedCategories)
+  );
   const [selectedFileName, setSelectedFileName] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -181,7 +195,9 @@ export function BlogPostForm({
     const parsed = blogPostSchema.safeParse(form);
 
     if (!parsed.success) {
-      setErrorMessage(parsed.error.issues[0]?.message ?? "Revisá los datos ingresados.");
+      setErrorMessage(
+        parsed.error.issues[0]?.message ?? "Revisá los datos ingresados."
+      );
       return;
     }
 
@@ -262,7 +278,7 @@ export function BlogPostForm({
         return;
       }
 
-      setForm(getInitialState(null, categories));
+      setForm(getInitialState(null, sortedCategories));
       setSelectedFileName("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -276,7 +292,8 @@ export function BlogPostForm({
       <CardHeader>
         <CardTitle className="text-xl">{formTitle}</CardTitle>
         <CardDescription className="text-zinc-400">
-          Publicá efemérides, novedades del canal, avisos de transmisión y contenido editorial.
+          Publicá efemérides, novedades del canal, bandas, solistas, avisos de
+          transmisión y contenido editorial.
         </CardDescription>
       </CardHeader>
 
@@ -326,7 +343,7 @@ export function BlogPostForm({
               onChange={(e) => setField("categoryId")(e.target.value)}
               className="flex h-12 w-full rounded-xl border border-white/10 bg-black/60 px-3 text-sm text-white outline-none transition focus:border-cyan-500/50"
             >
-              {categories.map((category) => (
+              {sortedCategories.map((category) => (
                 <option
                   key={category.id}
                   value={category.id}
