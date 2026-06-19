@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, Radio } from "lucide-react";
+
+import { trackEvent } from "@/lib/analytics/track-event";
 
 type HlsStreamPlayerProps = {
   sourceUrl: string;
@@ -10,6 +12,7 @@ type HlsStreamPlayerProps = {
 };
 
 type PlayerState = "idle" | "loading" | "ready" | "error";
+type Primitive = string | number | boolean | null;
 
 function getErrorMessage(errorDetail?: string) {
   if (!errorDetail) {
@@ -19,14 +22,53 @@ function getErrorMessage(errorDetail?: string) {
   return `No se pudo cargar la señal HLS (${errorDetail}).`;
 }
 
+function getUrlHost(value?: string | null) {
+  if (!value) return null;
+
+  try {
+    return new URL(value).host;
+  } catch {
+    return null;
+  }
+}
+
 export function HlsStreamPlayer({
   sourceUrl,
   fallbackEmbedUrl,
   title,
 }: Readonly<HlsStreamPlayerProps>) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const trackedEventsRef = useRef<Set<string>>(new Set());
   const [playerState, setPlayerState] = useState<PlayerState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const trackHlsEvent = useCallback(
+    (action: string, metadata: Record<string, Primitive | undefined> = {}) => {
+      const eventKey = `${sourceUrl}:${fallbackEmbedUrl ?? "no-fallback"}:${action}:${metadata.mode ?? ""}:${metadata.error_detail ?? ""}`;
+
+      if (trackedEventsRef.current.has(eventKey)) {
+        return;
+      }
+
+      trackedEventsRef.current.add(eventKey);
+
+      trackEvent({
+        eventName: "stream_interaction",
+        metadata: {
+          action,
+          component: "hls_stream_player",
+          provider: "self_hosted_hls",
+          title,
+          source_host: getUrlHost(sourceUrl),
+          fallback_host: getUrlHost(fallbackEmbedUrl),
+          has_source_url: Boolean(sourceUrl),
+          has_fallback_embed: Boolean(fallbackEmbedUrl),
+          ...metadata,
+        },
+      });
+    },
+    [fallbackEmbedUrl, sourceUrl, title]
+  );
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -41,13 +83,16 @@ export function HlsStreamPlayer({
     async function setupHls(videoElement: HTMLVideoElement) {
       setPlayerState("loading");
       setErrorMessage("");
+      trackHlsEvent("hls_load_start");
 
       if (videoElement.canPlayType("application/vnd.apple.mpegurl")) {
+        trackHlsEvent("hls_native_supported", { mode: "native" });
         videoElement.src = sourceUrl;
 
         const handleLoadedMetadata = () => {
           if (!cancelled) {
             setPlayerState("ready");
+            trackHlsEvent("hls_ready", { mode: "native" });
           }
         };
 
@@ -55,6 +100,18 @@ export function HlsStreamPlayer({
           if (!cancelled) {
             setPlayerState("error");
             setErrorMessage("El navegador no pudo reproducir la señal HLS nativa.");
+            trackHlsEvent("hls_error", {
+              mode: "native",
+              error_detail: "native_video_error",
+              fallback_triggered: Boolean(fallbackEmbedUrl),
+            });
+
+            if (fallbackEmbedUrl) {
+              trackHlsEvent("hls_fallback_youtube", {
+                mode: "native",
+                reason: "native_video_error",
+              });
+            }
           }
         };
 
@@ -80,8 +137,22 @@ export function HlsStreamPlayer({
       if (!Hls.isSupported()) {
         setPlayerState("error");
         setErrorMessage("Este navegador no soporta HLS ni MediaSource Extensions.");
+        trackHlsEvent("hls_unsupported", {
+          mode: "hls_js",
+          fallback_triggered: Boolean(fallbackEmbedUrl),
+        });
+
+        if (fallbackEmbedUrl) {
+          trackHlsEvent("hls_fallback_youtube", {
+            mode: "hls_js",
+            reason: "hls_unsupported",
+          });
+        }
+
         return;
       }
+
+      trackHlsEvent("hls_js_supported", { mode: "hls_js" });
 
       const hls = new Hls({
         enableWorker: true,
@@ -89,12 +160,14 @@ export function HlsStreamPlayer({
       });
 
       hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+        trackHlsEvent("hls_media_attached", { mode: "hls_js" });
         hls.loadSource(sourceUrl);
       });
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         if (!cancelled) {
           setPlayerState("ready");
+          trackHlsEvent("hls_ready", { mode: "hls_js" });
         }
       });
 
@@ -103,8 +176,25 @@ export function HlsStreamPlayer({
           return;
         }
 
+        const detail = String(data.details ?? "unknown_hls_error");
+
         setPlayerState("error");
-        setErrorMessage(getErrorMessage(data.details));
+        setErrorMessage(getErrorMessage(detail));
+        trackHlsEvent("hls_error", {
+          mode: "hls_js",
+          error_detail: detail,
+          error_type: String(data.type ?? "unknown"),
+          fatal: true,
+          fallback_triggered: Boolean(fallbackEmbedUrl),
+        });
+
+        if (fallbackEmbedUrl) {
+          trackHlsEvent("hls_fallback_youtube", {
+            mode: "hls_js",
+            reason: detail,
+          });
+        }
+
         hls.destroy();
       });
 
@@ -118,7 +208,7 @@ export function HlsStreamPlayer({
       cancelled = true;
       cleanup?.();
     };
-  }, [sourceUrl]);
+  }, [fallbackEmbedUrl, sourceUrl, trackHlsEvent]);
 
   if (playerState === "error" && fallbackEmbedUrl) {
     return (
