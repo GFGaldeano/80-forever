@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export type PublicStreamConfig = {
   id: string;
-  provider: "youtube" | "facebook" | "external";
+  provider: "youtube" | "facebook" | "external" | "self_hosted_hls";
+  source_url: string | null;
   embed_url: string | null;
   status: "live" | "offline" | "upcoming" | "replay";
   title: string;
@@ -16,7 +17,8 @@ export type PublicStreamConfig = {
 
 type PublicStreamConfigRow = {
   id: string;
-  provider: "youtube" | "facebook" | "external";
+  provider: "youtube" | "facebook" | "external" | "self_hosted_hls";
+  source_url: string | null;
   embed_url: string | null;
   status: "live" | "offline" | "upcoming" | "replay";
   title: string | null;
@@ -37,6 +39,7 @@ type StreamConfigTranslationRow = {
 const STREAM_SELECT = `
   id,
   provider,
+  source_url,
   embed_url,
   status,
   title,
@@ -110,6 +113,7 @@ export async function getPublicStreamConfig(
   return {
     id: row.id,
     provider: row.provider,
+    source_url: row.source_url,
     embed_url: row.embed_url,
     status: row.status,
     title: translation?.title || row.title || "",

@@ -2,6 +2,7 @@
 
 import type { PublicStreamConfig } from "@/lib/stream/get-public-stream-config";
 import { useLocale } from "@/i18n/locale-context";
+import { HlsStreamPlayer } from "@/components/streaming/hls-stream-player";
 import { PublicStreamPlaceholder } from "@/components/streaming/public-stream-placeholder";
 
 type PublicStreamPlayerProps = {
@@ -13,8 +14,12 @@ export function PublicStreamPlayer({
 }: Readonly<PublicStreamPlayerProps>) {
   const locale = useLocale();
   const status = stream?.status ?? "offline";
+  const isPlaybackStatus = status === "live" || status === "replay";
+  const isSelfHostedHls = stream?.provider === "self_hosted_hls";
+  const hasHlsSource =
+    isSelfHostedHls && isPlaybackStatus && Boolean(stream?.source_url);
   const hasEmbed =
-    (status === "live" || status === "replay") && Boolean(stream?.embed_url);
+    !isSelfHostedHls && isPlaybackStatus && Boolean(stream?.embed_url);
 
   const sectionTitle = locale === "en" ? "Main signal" : "Señal principal";
 
@@ -27,7 +32,13 @@ export function PublicStreamPlayer({
       </div>
 
       <div className="bg-black">
-        {hasEmbed ? (
+        {hasHlsSource ? (
+          <HlsStreamPlayer
+            sourceUrl={stream?.source_url ?? ""}
+            fallbackEmbedUrl={stream?.embed_url}
+            title={stream?.title || "80's Forever"}
+          />
+        ) : hasEmbed ? (
           <div className="aspect-video">
             <iframe
               title={stream?.title || "80's Forever"}
