@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AdminStreamConfig = {
   id: string;
-  provider: "youtube" | "facebook" | "external";
+  provider: "youtube" | "facebook" | "external" | "self_hosted_hls";
   source_url: string | null;
   embed_url: string | null;
   status: "live" | "offline" | "upcoming" | "replay";

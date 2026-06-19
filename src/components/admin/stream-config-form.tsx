@@ -83,6 +83,9 @@ export function StreamConfigForm({
       }));
     };
 
+  const providerMeta = streamProviderMeta[form.provider];
+  const isSelfHostedHls = form.provider === "self_hosted_hls";
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -243,10 +246,10 @@ export function StreamConfigForm({
 
             <div className="grid gap-5 lg:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="sourceUrl">URL de origen</Label>
+                <Label htmlFor="sourceUrl">{providerMeta.sourceUrlLabel}</Label>
                 <Input
                   id="sourceUrl"
-                  placeholder="https://..."
+                  placeholder={providerMeta.sourceUrlPlaceholder}
                   value={form.sourceUrl}
                   onChange={(e) => setField("sourceUrl")(e.target.value)}
                   className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
@@ -254,10 +257,10 @@ export function StreamConfigForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="embedUrl">URL de embed</Label>
+                <Label htmlFor="embedUrl">{providerMeta.embedUrlLabel}</Label>
                 <Input
                   id="embedUrl"
-                  placeholder="https://www.youtube.com/embed/..."
+                  placeholder={providerMeta.embedUrlPlaceholder}
                   value={form.embedUrl}
                   onChange={(e) => setField("embedUrl")(e.target.value)}
                   className="h-12 rounded-xl border-white/10 bg-black/60 text-white"
@@ -310,7 +313,7 @@ export function StreamConfigForm({
               Vista previa operativa
             </CardTitle>
             <CardDescription className="text-zinc-400">
-              Estado actual y preview del embed.
+              Estado actual y preview del proveedor configurado.
             </CardDescription>
           </CardHeader>
 
@@ -336,7 +339,27 @@ export function StreamConfigForm({
 
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-black">
               <div className="aspect-video">
-                {form.embedUrl ? (
+                {isSelfHostedHls ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-zinc-400">
+                    <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-300">
+                      HLS propio
+                    </span>
+                    <p>
+                      La URL HLS queda guardada para el reproductor self-hosted. El player HLS
+                      se activa en la próxima feature.
+                    </p>
+                    {form.sourceUrl ? (
+                      <code className="max-w-full overflow-hidden text-ellipsis rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-cyan-200">
+                        {form.sourceUrl}
+                      </code>
+                    ) : null}
+                    {form.embedUrl ? (
+                      <p className="text-xs text-zinc-500">
+                        Fallback YouTube configurado: {form.embedUrl}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : form.embedUrl ? (
                   <iframe
                     title="Vista previa del stream"
                     src={form.embedUrl}
@@ -379,6 +402,16 @@ export function StreamConfigForm({
             <code className="block rounded-xl border border-white/10 bg-black/50 px-3 py-3 text-xs text-cyan-300">
               https://www.youtube.com/embed/VIDEO_ID
             </code>
+
+            <p>
+              Para <span className="text-white">Self-hosted HLS</span>, guardá la URL pública
+              del manifiesto <span className="text-white">.m3u8</span> en el campo de origen.
+            </p>
+            <code className="block rounded-xl border border-white/10 bg-black/50 px-3 py-3 text-xs text-cyan-300">
+              https://stream.80forever.com/80forever/index.m3u8
+            </code>
+
+            <p>{providerMeta.embedUrlHelp}</p>
 
             <p>
               Cuando el estado sea <span className="text-white">Próximamente</span>, la home
