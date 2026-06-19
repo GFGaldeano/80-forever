@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const streamProviders = ["youtube", "facebook", "external"] as const;
+export const streamProviders = [
+  "youtube",
+  "facebook",
+  "external",
+  "self_hosted_hls",
+] as const;
+
 export const streamStatuses = ["live", "offline", "upcoming", "replay"] as const;
 
 export const streamConfigSchema = z
@@ -19,7 +25,25 @@ export const streamConfigSchema = z
     nextLiveAt: z.string().trim(),
   })
   .superRefine((values, ctx) => {
-    if ((values.status === "live" || values.status === "replay") && !values.embedUrl) {
+    const requiresPlaybackUrl = values.status === "live" || values.status === "replay";
+
+    if (
+      requiresPlaybackUrl &&
+      values.provider === "self_hosted_hls" &&
+      !values.sourceUrl
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sourceUrl"],
+        message: "La URL HLS (.m3u8) es obligatoria para Self-hosted HLS en Live o Replay.",
+      });
+    }
+
+    if (
+      requiresPlaybackUrl &&
+      values.provider !== "self_hosted_hls" &&
+      !values.embedUrl
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["embedUrl"],
@@ -37,9 +61,11 @@ export const streamConfigSchema = z
   });
 
 export type StreamConfigInput = z.infer<typeof streamConfigSchema>;
+export type StreamProvider = StreamConfigInput["provider"];
+export type StreamStatus = StreamConfigInput["status"];
 
 export const streamStatusMeta: Record<
-  StreamConfigInput["status"],
+  StreamStatus,
   { label: string; description: string }
 > = {
   live: {
@@ -61,10 +87,52 @@ export const streamStatusMeta: Record<
 };
 
 export const streamProviderMeta: Record<
-  StreamConfigInput["provider"],
-  { label: string }
+  StreamProvider,
+  {
+    label: string;
+    description: string;
+    sourceUrlLabel: string;
+    sourceUrlPlaceholder: string;
+    embedUrlLabel: string;
+    embedUrlPlaceholder: string;
+    embedUrlHelp: string;
+  }
 > = {
-  youtube: { label: "YouTube" },
-  facebook: { label: "Facebook" },
-  external: { label: "Externo" },
+  youtube: {
+    label: "YouTube",
+    description: "Fallback principal de emergencia y proveedor externo por embed.",
+    sourceUrlLabel: "URL de origen",
+    sourceUrlPlaceholder: "https://www.youtube.com/watch?v=VIDEO_ID",
+    embedUrlLabel: "URL de embed",
+    embedUrlPlaceholder: "https://www.youtube.com/embed/VIDEO_ID",
+    embedUrlHelp: "Usá la URL embed oficial de YouTube para mostrar el player en la home.",
+  },
+  facebook: {
+    label: "Facebook",
+    description: "Proveedor externo para emisiones públicas de Facebook Live.",
+    sourceUrlLabel: "URL de origen",
+    sourceUrlPlaceholder: "https://www.facebook.com/...",
+    embedUrlLabel: "URL de embed",
+    embedUrlPlaceholder: "https://www.facebook.com/plugins/video.php?...",
+    embedUrlHelp: "Usá la URL de embed pública provista por Facebook.",
+  },
+  external: {
+    label: "Externo",
+    description: "Embed externo compatible con iframe.",
+    sourceUrlLabel: "URL de origen",
+    sourceUrlPlaceholder: "https://...",
+    embedUrlLabel: "URL de embed",
+    embedUrlPlaceholder: "https://...",
+    embedUrlHelp: "Usá una URL embebible compatible con iframe.",
+  },
+  self_hosted_hls: {
+    label: "Self-hosted HLS",
+    description: "Servidor propio de streaming. Preparado para MediaMTX/OBS y player HLS.",
+    sourceUrlLabel: "URL HLS (.m3u8)",
+    sourceUrlPlaceholder: "https://stream.80forever.com/80forever/index.m3u8",
+    embedUrlLabel: "URL fallback de emergencia",
+    embedUrlPlaceholder: "https://www.youtube.com/embed/VIDEO_ID",
+    embedUrlHelp:
+      "Opcional: conservá un embed YouTube como fallback rápido si el servidor propio falla.",
+  },
 };
