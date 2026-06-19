@@ -6,7 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "supabase:start": "npx supabase start",
+    "supabase:stop": "npx supabase stop",
+    "supabase:status": "npx supabase status",
+    "supabase:reset": "npx supabase db reset",
+    "supabase:diff": "npx supabase db diff",
+    "supabase:push": "npx supabase db push",
+    "supabase:link": "npx supabase link",
+    "supabase:gen-types": "npx supabase gen types typescript --local > src/types/supabase.generated.ts",
+    "supabase:db:start": "npx supabase db start",
+    "supabase:db:reset": "npx supabase db reset",
+    "supabase:db:diff": "npx supabase db diff",
+    "supabase:stop:all": "npx supabase stop --all"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
