@@ -1,0 +1,18 @@
+# 80 Forever - MediaMTX local config
+# OBS -> RTMP localhost -> MediaMTX -> HLS localhost -> 80 Forever
+# OBS server: rtmp://localhost:1935
+# OBS stream key: 80forever
+# HLS playback: http://localhost:8888/80forever/index.m3u8
+
+logLevel: info
+
+rtmp: yes
+rtmpAddress: :1935
+
+hls: yes
+hlsAddress: :8888
+hlsAllowOrigin: '*'
+
+paths:
+  80forever:
+    source: publisher
