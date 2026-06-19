@@ -1,0 +1,7 @@
+-- 80 Forever local seed placeholder.
+--
+-- Keep this file intentionally light. Structural changes must live in
+-- supabase/migrations and be validated with `npx supabase db reset`.
+--
+-- Initial singleton rows needed for local bootstrapping are handled by
+-- migrations to keep reset behavior deterministic.
