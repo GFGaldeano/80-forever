@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Supabase local generated files
+supabase/.branches/
+supabase/.temp/
+supabase/.shadow/
+supabase/.data/
+supabase/.cache/
